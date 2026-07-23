@@ -1,0 +1,3 @@
+f24a75c41ee2e107448ff1d2b8769ee970dad376d20cd7093da0c9106814ab5a  data/raw/boundaries/hdx_cod_ab_cmr/cmr_admin_boundaries.geojson.zip
+9d0ff998057c3afe7f3a6334d71e9d7c353c64fe6e7c35b01fe14d804c97f04b  data/raw/boundaries/geoboundaries/geoBoundaries-CMR-ADM3.geojson
+81b6159418f9b8d8341822d7bcfd9d42d31c893492ce336f5f629ca08bf939fb  data/raw/boundaries/geoboundaries/geoBoundaries-CMR-ADM2.geojson

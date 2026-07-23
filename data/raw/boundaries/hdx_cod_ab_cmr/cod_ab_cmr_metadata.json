@@ -1,0 +1,15 @@
+{
+    "created": "2025-11-03T16:00:08.712440",
+    "description": "Cameroon administrative level 0-3 boundaries (COD-AB), GeoJSON",
+    "format": "GeoJSON",
+    "download_url": "https://data.humdata.org/dataset/b13f08ef-92ee-4446-9b0a-e219f5c25415/resource/2248ac6d-9675-47de-90d3-1e7ce6e601b1/download/cmr_admin_boundaries.geojson.zip",
+    "id": "2248ac6d-9675-47de-90d3-1e7ce6e601b1",
+    "last_modified": "2026-01-26T15:23:52.278273",
+    "metadata_modified": "2026-03-10T08:40:45.192138",
+    "microdata": false,
+    "dataset_id": "b13f08ef-92ee-4446-9b0a-e219f5c25415",
+    "resource_type": "file.upload",
+    "name": "cmr_admin_boundaries.geojson.zip",
+    "mimetype": "application/zip",
+    "size": "10.5M"
+}

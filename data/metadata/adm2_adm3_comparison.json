@@ -1,0 +1,9 @@
+{
+  "adm3_union_area_km2": 289.72898706712,
+  "adm2_mfoundi_area_km2": 289.7289870671199,
+  "intersection_area_km2": 289.7289870671193,
+  "symmetric_difference_area_km2": 0.0,
+  "symmetric_difference_ratio": 0.0,
+  "adm2_covers_adm3_union": true,
+  "adm3_union_covers_adm2": true
+}

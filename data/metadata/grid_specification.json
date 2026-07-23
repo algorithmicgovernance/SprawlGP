@@ -1,0 +1,31 @@
+{
+  "grid_id": "yaounde_epsg32632_30m_anchor0_v1",
+  "grid_version": 1,
+  "crs": "EPSG:32632",
+  "epsg": 32632,
+  "resolution_m": 30.0,
+  "anchor_x_m": 0.0,
+  "anchor_y_m": 0.0,
+  "extent": {
+    "xmin": 762570.0,
+    "ymin": 405810.0,
+    "xmax": 790950.0,
+    "ymax": 444150.0
+  },
+  "width": 946,
+  "height": 1278,
+  "transform": [
+    30.0,
+    0.0,
+    762570.0,
+    0.0,
+    -30.0,
+    444150.0
+  ],
+  "inclusion_rule": "pixel_center",
+  "extent_geometry": "context_buffer",
+  "context_buffer_m": 5000.0,
+  "context_cell_count": 879666,
+  "core_cell_count": 321909,
+  "cell_id_pattern": "EPSG32632_30m_<x-index>_<y-index>"
+}
