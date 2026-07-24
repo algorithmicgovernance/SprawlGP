@@ -123,13 +123,76 @@ Feature Engineering
 
 ---
 
+
 ## Data Sources
+
+### Administrative Boundaries
+
+The primary boundary source is the Cameroon Common Operational Dataset for
+Administrative Boundaries (`cod-ab-cmr`), provided by OCHA and originally
+produced by the Institut National de Cartographie of Cameroon.
+
+The seven ADM3 units corresponding to Yaoundé I–VII were selected using their
+administrative P-codes and dissolved to construct the Yaoundé administrative
+core. Their union was validated against the ADM2 Mfoundi boundary.
+
+All processed geometries use `EPSG:32632`. A 5 km context buffer and a convex
+hull are retained separately. The authoritative Landsat grid has a 30 m
+resolution, a fixed `(0, 0)` anchor and stable global cell identifiers.
 
 ### Earth Observation
 
-- Landsat annual imagery (1990–2020)
+The project uses Landsat Collection 2 Tier 1 Level 2 Surface Reflectance
+imagery from:
 
-### Spatial Predictors
+- Landsat 5 TM: `LANDSAT/LT05/C02/T1_L2`
+- Landsat 7 ETM+: `LANDSAT/LE07/C02/T1_L2`
+- Landsat 8 OLI/TIRS: `LANDSAT/LC08/C02/T1_L2`
+
+The target observation epochs are:
+
+`1990`, `1995`, `2000`, `2005`, `2010`, `2015` and `2020`.
+
+For each epoch, a three-year diagnostic period was queried to assess scene
+availability around the target year. Scene-level QA masking excludes fill,
+cloud, dilated cloud, cloud shadow, snow, cirrus where applicable and
+radiometric saturation. Water is retained as a valid observation.
+
+Generated output:
+
+- a complete Landsat scene manifest;
+- scene-level valid coverage over the administrative core and context area;
+- monthly availability summaries;
+- candidate compositing-window comparisons;
+- an epoch-level quality summary;
+- the exact selected Earth Engine scene identifiers;
+- a frozen compositing protocol and catalogue checksum.
+
+The selected scene set is recorded in:
+
+- `data/metadata/landsat/selected_scene_manifest.csv`
+- `data/metadata/landsat/compositing_protocol.yaml`
+- `data/metadata/landsat/catalog_version.json`
+
+Final Landsat composites have not yet been generated. They will be constructed
+during ... by loading the exact frozen scene identifiers rather than
+re-querying the collections dynamically.
+
+### Auxiliary and Spatial Predictors
+
+The following sources are planned for Day 3 and later stages but have not yet
+been integrated into the model-ready dataset:
+
+- SRTM elevation and derived slope;
+- OpenStreetMap roads and current infrastructure;
+- GHSL built-up surface and population products.
+
+GHSL will remain an auxiliary comparison and validation source, while current
+OpenStreetMap data will be documented carefully because its historical
+completeness varies.
+
+
+#### Spatial Predictors
 
 Potential predictors include:
 

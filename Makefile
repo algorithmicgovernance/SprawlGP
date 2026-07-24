@@ -22,7 +22,30 @@ build-grid:  ## Build the study grid from the YAML configuration
 	python -m src.analysis.boundaries.build_study_grid \
 		--config configs/study_area.yaml
 
+visualize-grid: ## Visualize the study grid and generate all diagnostic plots (overview, comparison, masks, and grid alignment) in reports/day1/
+	python -m src.analysis.boundaries.visualize_study_grid \
+		--config configs/study_area.yaml
+
 test-grid:  ## Run pytest on the study grid module
-	pytest tests/test_study_grid.py
+	pytest tests/test_study_grid.py -v
+
+qa-day1: build-grid visualize-grid test-grid  ## Run the complete QA pipeline (build, visualize, test) without updating the reference baseline
 
 day1: inspect-boundaries build-grid test-grid  ## Run the complete Day 1 pipeline (inspection, grid build, tests)
+
+
+
+.PHONY: landsat-catalog landsat-visuals test-landsat day2
+
+landsat-catalog:
+	python -m src.analysis.landsat.build_catalog \
+		--config configs/landsat_catalog.yaml
+
+landsat-visuals:
+	python -m src.analysis.landsat.visualize_catalog \
+		--config configs/landsat_catalog.yaml
+
+test-landsat:
+	pytest tests/test_landsat_catalog.py -v
+
+day2: landsat-catalog landsat-visuals test-landsat

@@ -33,6 +33,7 @@ dependencies = [
   "geopandas>=0.14",
   "shapely>=2.0",
   "pyproj>=3.6",
+  "earthengine-api>=1.7.35",
 
   # Configuration
   "PyYAML>=6.0",
