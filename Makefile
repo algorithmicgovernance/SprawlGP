@@ -49,3 +49,42 @@ test-landsat:
 	pytest tests/test_landsat_catalog.py -v
 
 day2: landsat-catalog landsat-visuals test-landsat
+
+.PHONY: \
+	orchestrate-preflight \
+	orchestrate-submit \
+	orchestrate-status \
+	orchestrate-osm \
+	orchestrate-finalize \
+	test-orchestrate \
+	freeze-orchestrate-v1
+
+orchestrate-preflight:
+	python -m src.analysis.orchestration.preflight \
+		--config configs/orchestrate_sources.yaml
+
+orchestrate-submit:
+	python -m src.analysis.landsat.build_composites \
+		--config configs/orchestrate_sources.yaml \
+		--submit
+
+orchestrate-status:
+	python -m src.analysis.orchestration.finalize \
+		--config configs/orchestrate_sources.yaml \
+		--status-only
+
+orchestrate-osm:
+	python -m src.analysis.auxiliary.build_osm_extract \
+		--config configs/orchestrate_sources.yaml
+
+orchestrate-finalize:
+	python -m src.analysis.orchestration.finalize \
+		--config configs/orchestrate_sources.yaml
+
+test-orchestrate:
+	pytest tests/test_orchestrate_sources.py -v
+
+freeze-orchestrate-v1:
+	mkdir -p tests/reference
+	cp data/metadata/orchestration/orchestrate_version.json \
+		tests/reference/orchestrate_sources_v1.json
