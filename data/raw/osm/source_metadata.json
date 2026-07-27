@@ -1,0 +1,21 @@
+{
+  "download_date": "2026-07-25",
+  "download_skipped_existing_file": true,
+  "feature_counts": {
+    "buildings_reference": 401097,
+    "railways": 68,
+    "roads_major": 1718
+  },
+  "licence": "Open Database Licence (ODbL)",
+  "processed_crs": "EPSG:32632",
+  "processed_output": "/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/processed/osm/yaounde_current_osm.gpkg",
+  "provider": "Geofabrik",
+  "snapshot_date": "2026-07-25",
+  "source_dataset": "OpenStreetMap Cameroon extract",
+  "source_filename": "cameroon_20260725_free.gpkg.zip",
+  "source_format": "Geofabrik free GeoPackage archive",
+  "source_last_modified": "Sat, 25 Jul 2026 02:50:02 GMT",
+  "source_sha256": "a0dfcf623b5d5565238dfc23590842a98edc9fba8301f4eeb9b31510278d8380",
+  "source_url": "https://download.geofabrik.de/africa/cameroon-latest-free.gpkg.zip",
+  "temporal_interpretation": "current snapshot only"
+}

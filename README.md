@@ -191,6 +191,12 @@ GHSL will remain an auxiliary comparison and validation source, while current
 OpenStreetMap data will be documented carefully because its historical
 completeness varies.
 
+### Spectral Built-up Candidates
+
+Completed Landsat composites are converted into SAVI, MNDWI, NDBI, IBI, IBUI, VbSWIR1-BI and NDBSUI layers. Epoch-specific Otsu thresholds are estimated inside the Yaoundé administrative core and applied to the context grid.
+
+The resulting binary maps are unvalidated candidate pseudo-labels. Missing or numerically undefined pixels remain masked and are not treated as non-built-up.
+Final index selection, comparative validation and temporal correction are performed in later stages.
 
 #### Spatial Predictors
 
