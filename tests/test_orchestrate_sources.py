@@ -15,6 +15,8 @@ import pandas as pd
 import pytest
 import yaml
 
+from src.analysis.landsat.build_composites import LANDSAT_BANDS
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = PROJECT_ROOT / "configs/orchestrate_sources.yaml"
@@ -86,3 +88,16 @@ def test_observation_counts_are_plausible(epoch_quality: pd.DataFrame) -> None:
     assert (epoch_quality["covered_grid_pct"] > 0.0).all(), (
         "Every epoch should cover at least some part of the grid."
     )
+    
+# Critical Landsat 9 harmonisation checks for orchestration.    
+def test_landsat9_uses_the_oli_band_mapping() -> None:
+    """Ensure LC09 is harmonised exactly like LC08."""
+    assert LANDSAT_BANDS["LC09"] == LANDSAT_BANDS["LC08"]
+    assert list(LANDSAT_BANDS["LC09"].values()) == [
+        "blue",
+        "green",
+        "red",
+        "nir",
+        "swir1",
+        "swir2",
+    ]

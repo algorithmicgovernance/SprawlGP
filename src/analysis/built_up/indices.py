@@ -1,4 +1,4 @@
-"""Spectral-index formulas, formula-specific masks and candidate construction."""
+"""Spectral-index formulas, masks and candidate construction."""
 
 from __future__ import annotations
 
@@ -7,17 +7,54 @@ from typing import Any
 
 try:
     import ee
-except ImportError:  # Allows pure formula tests without Earth Engine installed.
+except ImportError:
     ee = None
 
 
-COMMON_BANDS = ["blue", "green", "red", "nir", "swir1", "swir2"]
-INTERMEDIATE_INDICES = ["savi", "mndwi"]
-SELECTED_INDICES = ["ndbi", "ibi", "ibui", "vbswir1_bi", "ndbsui"]
-INDEX_BANDS = INTERMEDIATE_INDICES + SELECTED_INDICES + ["valid_composite"]
+COMMON_BANDS = [
+    "blue",
+    "green",
+    "red",
+    "nir",
+    "swir1",
+    "swir2",
+]
+
+INTERMEDIATE_INDICES = [
+    "savi",
+    "mndwi",
+]
+
+# Retained in the continuous index assets.
+CONTINUOUS_INDICES = [
+    "ndbi",
+    "ibi",
+    "ibui",
+    "vbswir1_bi",
+    "ndbsui",
+]
+
+# Allowed to produce Otsu candidates and enter Day 5 comparison.
+CANDIDATE_INDICES = [
+    "ndbi",
+    "ibui",
+    "vbswir1_bi",
+    "ndbsui",
+]
+
+CONTINUOUS_INDEX_BANDS = (
+    INTERMEDIATE_INDICES
+    + CONTINUOUS_INDICES
+)
+
+INDEX_BANDS = (
+    CONTINUOUS_INDEX_BANDS
+    + ["valid_composite"]
+)
+
 CANDIDATE_BANDS = (
-    [f"built_{name}" for name in SELECTED_INDICES]
-    + [f"valid_{name}" for name in SELECTED_INDICES]
+    [f"built_{name}" for name in CANDIDATE_INDICES]
+    + [f"valid_{name}" for name in CANDIDATE_INDICES]
 )
 
 
@@ -25,7 +62,8 @@ def require_earth_engine() -> None:
     """Raise an actionable error when Earth Engine is unavailable."""
     if ee is None:
         raise ImportError(
-            "The Earth Engine Python API is required for raster processing."
+            "The Earth Engine Python API is required for raster "
+            "processing."
         )
 
 
@@ -35,14 +73,13 @@ def safe_ratio(
     epsilon: float,
     name: str,
 ):
-    """Divide two Earth Engine images while masking unstable denominators."""
+    """Divide images while masking numerically unstable denominators."""
     require_earth_engine()
     valid_denominator = denominator.abs().gt(float(epsilon))
-    safe_numerator = numerator.updateMask(valid_denominator)
-    safe_denominator = denominator.updateMask(valid_denominator)
 
     return (
-        safe_numerator.divide(safe_denominator)
+        numerator.updateMask(valid_denominator)
+        .divide(denominator.updateMask(valid_denominator))
         .rename(name)
         .toFloat()
     )
@@ -56,22 +93,26 @@ def build_index_stack(
     savi_l: float,
     minimum_valid_observations: int,
 ):
-    """Calculate seven continuous indices and the explicit composite-valid band.
+    """Calculate seven continuous indices and one validity band.
 
-    Each index retains the maximum valid coverage permitted by its own formula.
-    NDBSUI receives an additional mask where red or SWIR1 reflectance is
-    negative, while the other indices are not forced to share that mask.
+    IBI remains in the continuous asset for transparency. It is not
+    included in ``CANDIDATE_INDICES`` and therefore receives no Otsu
+    threshold or binary candidate band.
     """
     require_earth_engine()
     composite = composite.select(COMMON_BANDS)
-    count = observation_count.select("valid_observation_count")
+    count = observation_count.select(
+        "valid_observation_count"
+    )
 
     all_bands_valid = (
         composite.mask()
         .reduce(ee.Reducer.min())
         .eq(1)
     )
-    observation_valid = count.gte(int(minimum_valid_observations))
+    observation_valid = count.gte(
+        int(minimum_valid_observations)
+    )
     base_valid = all_bands_valid.And(observation_valid)
 
     source = composite.updateMask(base_valid)
@@ -128,8 +169,12 @@ def build_index_stack(
         .sqrt()
     )
     ndbsui = safe_ratio(
-        swir2.add(geometric_mean).subtract(red.add(swir1)),
-        swir2.add(geometric_mean).add(red.add(swir1)),
+        swir2.add(geometric_mean).subtract(
+            red.add(swir1)
+        ),
+        swir2.add(geometric_mean).add(
+            red.add(swir1)
+        ),
         epsilon,
         "ndbsui",
     ).updateMask(nonnegative_inputs)
@@ -149,8 +194,12 @@ def build_index_stack(
         "vbswir1_bi": vbswir1_bi,
         "ndbsui": ndbsui,
     }
+
     stack = ee.Image.cat(
-        [images[name] for name in INTERMEDIATE_INDICES + SELECTED_INDICES]
+        [
+            images[name]
+            for name in CONTINUOUS_INDEX_BANDS
+        ]
         + [valid_composite]
     ).select(INDEX_BANDS)
 
@@ -161,14 +210,16 @@ def build_candidate_stack(
     index_images: dict[str, Any],
     thresholds: dict[str, float],
 ):
-    """Create five masked candidate bands and five explicit validity bands."""
+    """Create candidate and validity bands for candidate indices."""
     require_earth_engine()
     built_bands = []
     valid_bands = []
 
-    for index_name in SELECTED_INDICES:
+    for index_name in CANDIDATE_INDICES:
         if index_name not in thresholds:
-            raise KeyError(f"Missing threshold for index '{index_name}'.")
+            raise KeyError(
+                f"Missing threshold for index '{index_name}'."
+            )
 
         index_image = index_images[index_name]
         valid = (
@@ -187,7 +238,9 @@ def build_candidate_stack(
         built_bands.append(built)
         valid_bands.append(valid)
 
-    return ee.Image.cat(built_bands + valid_bands).select(CANDIDATE_BANDS)
+    return ee.Image.cat(
+        built_bands + valid_bands
+    ).select(CANDIDATE_BANDS)
 
 
 def _safe_scalar_ratio(
@@ -196,7 +249,10 @@ def _safe_scalar_ratio(
     epsilon: float,
 ) -> float | None:
     """Return a scalar ratio or ``None`` for an unstable denominator."""
-    if not math.isfinite(numerator) or not math.isfinite(denominator):
+    if not math.isfinite(numerator):
+        return None
+
+    if not math.isfinite(denominator):
         return None
 
     if abs(denominator) <= epsilon:
@@ -216,11 +272,7 @@ def reference_index_values(
     epsilon: float = 1e-6,
     savi_l: float = 0.5,
 ) -> dict[str, float | None]:
-    """Calculate scalar reference values used by the critical formula tests.
-
-    This function is a small executable specification of the Earth Engine
-    formulas. ``None`` represents a value that must remain masked.
-    """
+    """Calculate scalar reference values used by formula tests."""
     savi = _safe_scalar_ratio(
         (nir - red) * (1.0 + savi_l),
         nir + red + savi_l,

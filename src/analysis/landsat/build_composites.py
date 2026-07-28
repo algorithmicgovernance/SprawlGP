@@ -59,6 +59,14 @@ LANDSAT_BANDS = {
         "SR_B6": "swir1",
         "SR_B7": "swir2",
     },
+    "LC09": {
+        "SR_B2": "blue",
+        "SR_B3": "green",
+        "SR_B4": "red",
+        "SR_B5": "nir",
+        "SR_B6": "swir1",
+        "SR_B7": "swir2",
+    },
 }
 
 
@@ -356,11 +364,14 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
     for epoch in config["landsat"]["epochs"]:
         epoch_manifest = manifest[manifest["epoch"].astype(int) == int(epoch)]
         
-        # Some epochs (e.g., 1990, 1995, 2000) may have no selected scenes because no
-        # Landsat imagery exists for that period over the study area. Skipping them is
-        # expected and does not indicate a failure.
+        # Some configured epochs may have no scenes in the frozen Day 2
+        # manifest. This can reflect archive availability, the selected temporal
+        # window, quality requirements or catalogue-selection decisions.
         if epoch_manifest.empty:
-            print(f"Skipping epoch {epoch}: no selected scenes in manifest.")
+            print(
+                f"Skipping epoch {epoch}: no scenes are available in the "
+                "frozen Day 2 selected-scene manifest."
+            )
             continue
         
         composite, count_image, scene_counts = build_epoch_products(
@@ -470,7 +481,9 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
                 "source": "GHSL",
                 "asset_id": "see_ghsl_epoch_manifest.csv",
                 "representation": "native_100m_grid",
-                "temporal_representation": "seven_epochs",
+                "temporal_representation": (
+                    f"{len(config['ghsl']['epochs'])}_configured_epochs"
+                ),
                 "intended_role": "auxiliary_benchmark_and_population",
             },
             {

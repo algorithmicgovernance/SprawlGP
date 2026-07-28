@@ -6,4 +6,4 @@ epoch,window_name,number_of_months,window_start,window_end,sensor_mode,sensor_ke
 2010,Jul-Sep_3m,3,2010-07-01,2010-10-01,primary_plus_supplemental,"LT05,LE07",1,27.034545800423416,0.0,True
 2015,Jul-Sep_3m,3,2015-07-01,2015-10-01,primary_only,LC08,2,70.05992553901368,0.0,False
 2020,Jul-Sep_3m,3,2020-07-01,2020-10-01,primary_only,LC08,1,31.174148193366612,0.0,False
-2025,Jul-Sep_3m,3,2025-07-01,2025-10-01,primary_only,LC08,1,1.041198517932418,0.0,False
+2025,Nov-Jan_3m,3,2024-11-01,2025-02-01,primary_only,"LC08,LC09",19,99.99999154731272,92.05031841879324,False

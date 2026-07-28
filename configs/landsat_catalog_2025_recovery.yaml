@@ -1,0 +1,85 @@
+# catalog:
+#   version: 2
+#   earth_engine_project: urban-sprawl-ssa
+#   epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+#   diagnostic_years_before: 1
+#   diagnostic_years_after: 1
+
+catalog:
+  version: 2
+  epochs: [2025]
+  earth_engine_project: urban-sprawl-ssa
+  diagnostic_years_before: 1
+  diagnostic_years_after: 1 
+
+study_area:
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  context_boundary: data/processed/boundaries/yaounde_context_buffer.gpkg
+  boundary_report: data/metadata/boundary_report.json
+  grid_specification: data/metadata/grid_specification.json
+
+collections:
+  LT05:
+    id: LANDSAT/LT05/C02/T1_L2
+    required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+  LE07:
+    id: LANDSAT/LE07/C02/T1_L2
+    required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+  LC08:
+    id: LANDSAT/LC08/C02/T1_L2
+    required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+  LC09:
+    id: LANDSAT/LC09/C02/T1_L2
+    spacecraft: LANDSAT_9
+    required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+      # - SR_B2
+      # - SR_B3
+      # - SR_B4
+      # - SR_B5
+      # - SR_B6
+      # - SR_B7
+
+epoch_sensor_policy:
+  1990: {primary: [LT05], supplemental: [], diagnostic_only: []}
+  1995: {primary: [LT05], supplemental: [], diagnostic_only: []}
+  2000: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
+  2005: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
+  2010: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
+  2015: {primary: [LC08], supplemental: [LE07], diagnostic_only: []}
+  2020: {primary: [LC08], supplemental: [], diagnostic_only: [LE07]}
+  2025: {primary: [LC08, LC09], supplemental: [], diagnostic_only: [LE07]}
+
+quality_mask:
+  mask_fill: true
+  mask_dilated_cloud: true
+  mask_cirrus_landsat8: true
+  mask_cloud: true
+  mask_cloud_shadow: true
+  mask_snow: true
+  mask_radiometric_saturation: true
+  mask_water: false
+
+statistics:
+  max_pixels: 10000000
+  tile_scale: 4
+
+candidate_windows:
+  lengths_months: [3, 4, 6, 12]
+  allow_cross_year_windows: true
+
+selection:
+  minimum_coverage_one_observation_pct: 95.0
+  preferred_coverage_three_observations_pct: 80.0
+  select_shortest_acceptable_window: true
+  coverage_comparison_tolerance_pct: 0.5
+
+recovery_quality:
+  fail_below_core_coverage_pct: 80
+  preferred_core_coverage_pct: 95
+  minimum_selected_scenes: 2
+
+outputs:
+  directory: data/metadata/landsat_2025_recovery
+  report_directory: reports/landsat_2025_recovery
+  reference_catalog:
+    tests/reference/landsat_catalog_2025_recovery.json

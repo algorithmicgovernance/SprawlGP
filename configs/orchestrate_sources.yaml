@@ -1,4 +1,4 @@
-version: 1
+version: 2
 
 project:
   earth_engine_project: urban-sprawl-ssa
@@ -11,7 +11,7 @@ inputs:
   selected_scene_manifest: data/metadata/landsat/selected_scene_manifest.csv
   compositing_protocol: data/metadata/landsat/compositing_protocol.yaml
   catalog_version: data/metadata/landsat/catalog_version.json
-  catalog_reference: tests/reference/landsat_catalog_v1.json
+  catalog_reference: tests/reference/landsat_catalog_v2.json
 
 regions:
   core: data/processed/boundaries/yaounde_core.gpkg
@@ -113,4 +113,4 @@ reports:
   source_alignment_figure: 03_source_alignment.png
 
 reference:
-  day3_sources: tests/reference/orchestrate_sources_v1.json
+  day3_sources: tests/reference/orchestrate_sources_v2.json

@@ -13,6 +13,9 @@ import yaml
 
 from src.analysis.built_up.indices import (
     CANDIDATE_BANDS,
+    CANDIDATE_INDICES,
+    CONTINUOUS_INDICES,
+    CONTINUOUS_INDEX_BANDS,
     INDEX_BANDS,
     reference_index_values,
 )
@@ -105,6 +108,28 @@ def test_index_formulas_on_reference_pixels() -> None:
     assert negative_square_root_input["ndbsui"] is None
 
 
+
+def test_ibi_is_retained_only_as_continuous_index() -> None:
+    """Ensure IBI remains auditable but is not a candidate method."""
+    assert "ibi" in CONTINUOUS_INDICES
+    assert "ibi" in INDEX_BANDS
+    assert "ibi" not in CANDIDATE_INDICES
+    assert "built_ibi" not in CANDIDATE_BANDS
+    assert "valid_ibi" not in CANDIDATE_BANDS
+
+
+def test_configured_index_roles_match_pipeline(
+    config: dict[str, Any],
+) -> None:
+    """Ensure configuration and implemented index roles remain aligned."""
+    assert config["indices"]["continuous"] == CONTINUOUS_INDICES
+    assert config["indices"]["candidates"] == CANDIDATE_INDICES
+    assert set(
+        config["classification"]["built_up_direction"]
+    ) == set(CANDIDATE_INDICES)
+
+
+
 # 2. Otsu must find a defensible split for a clearly bimodal histogram.
 
 
@@ -187,13 +212,38 @@ def test_processed_epochs_and_dynamic_counts(
     assert observed_epochs == expected_epochs
     assert len(outputs) == len(expected_epochs) * 2
     assert outputs["continuous_index_layers"].sum() == (
-        len(expected_epochs) * 7
+        len(expected_epochs) * len(CONTINUOUS_INDEX_BANDS)
     )
     assert outputs["binary_candidate_layers"].sum() == (
-        len(expected_epochs) * 5
+        len(expected_epochs) * len(CANDIDATE_INDICES)
     )
-    assert len(thresholds) == len(expected_epochs) * 5
-    assert len(areas) == len(expected_epochs) * 5
+    assert len(thresholds) == len(expected_epochs) * len(CANDIDATE_INDICES)
+    assert len(areas) == len(expected_epochs) * len(CANDIDATE_INDICES)
+
+
+
+def test_generated_candidate_metadata_excludes_ibi(
+    config: dict[str, Any],
+) -> None:
+    """Ensure regenerated threshold and area tables contain no IBI rows."""
+    tables = generated_tables(config)
+
+    if tables is None:
+        pytest.skip(
+            "Generated built-up candidate metadata is not available."
+        )
+
+    outputs, thresholds, areas = tables
+    assert "ibi" not in set(thresholds["index_name"].astype(str))
+    assert "ibi" not in set(areas["index_name"].astype(str))
+
+    candidate_rows = outputs[
+        outputs["product_type"] == "candidates"
+    ]
+
+    for bands in candidate_rows["band_names"].astype(str):
+        assert "built_ibi" not in bands.split(",")
+        assert "valid_ibi" not in bands.split(",")
 
 
 # 5. Every successful threshold must be finite, bounded and non-degenerate.
@@ -274,7 +324,7 @@ def test_exported_assets_schema_grid_domain_and_traceability(
 
         if row.product_type == "candidates":
             values = image.select(
-                [f"built_{name}" for name in config["indices"]["selected"]]
+                [f"built_{name}" for name in CANDIDATE_INDICES]
             ).reduceRegion(
                 reducer=ee.Reducer.minMax(),
                 geometry=image.geometry(),
@@ -284,6 +334,6 @@ def test_exported_assets_schema_grid_domain_and_traceability(
                 tileScale=int(config["histogram"]["tile_scale"]),
             ).getInfo()
 
-            for name in config["indices"]["selected"]:
+            for name in CANDIDATE_INDICES:
                 assert values[f"built_{name}_min"] == 0
                 assert values[f"built_{name}_max"] == 1

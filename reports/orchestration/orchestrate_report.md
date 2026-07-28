@@ -8,14 +8,14 @@
 | 2010 | {"LE07": 1} | 1 | 23.92% | 0.00 | PASS |
 | 2015 | {"LC08": 2} | 2 | 46.64% | 0.00 | PASS |
 | 2020 | {"LC08": 1} | 1 | 29.57% | 0.00 | PASS |
-| 2025 | {"LC08": 1} | 1 | 0.52% | 0.00 | PASS |
+| 2025 | {"LC08": 10, "LC09": 9} | 19 | 99.89% | 7.00 | PASS |
 
 ## Auxiliary sources
 
 | Source | Spatial representation | Temporal representation | Intended role |
 |---|---|---|---|
 | SRTM | exact_project_grid | static_approximately_2000 | elevation_and_slope_predictors |
-| GHSL | native_100m_grid | seven_epochs | auxiliary_benchmark_and_population |
+| GHSL | native_100m_grid | 8_configured_epochs | auxiliary_benchmark_and_population |
 | OpenStreetMap | vector_EPSG32632 | current_snapshot | recent_validation_and_accessibility |
 
 ## Known limitations

@@ -35,8 +35,10 @@ from src.analysis.orchestration.common import (
 )
 from src.analysis.built_up.indices import (
     CANDIDATE_BANDS,
+    CANDIDATE_INDICES,
+    CONTINUOUS_INDICES,
+    CONTINUOUS_INDEX_BANDS,
     INDEX_BANDS,
-    SELECTED_INDICES,
     build_candidate_stack,
     build_index_stack,
 )
@@ -59,6 +61,62 @@ class EpochBundle:
     threshold_rows: list[dict[str, Any]]
     area_rows: list[dict[str, Any]]
     histograms: dict[str, Any]
+
+
+
+def validate_index_configuration(
+    config: dict[str, Any],
+) -> None:
+    """Ensure YAML index roles match the implemented pipeline schema."""
+    configured_continuous = list(
+        config["indices"]["continuous"]
+    )
+    configured_candidates = list(
+        config["indices"]["candidates"]
+    )
+
+    if configured_continuous != CONTINUOUS_INDICES:
+        raise ValueError(
+            "Configured continuous indices do not match the implemented "
+            f"schema: {configured_continuous} != {CONTINUOUS_INDICES}"
+        )
+
+    if configured_candidates != CANDIDATE_INDICES:
+        raise ValueError(
+            "Configured candidate indices do not match the implemented "
+            f"schema: {configured_candidates} != {CANDIDATE_INDICES}"
+        )
+
+    if not set(configured_candidates).issubset(
+        configured_continuous
+    ):
+        raise ValueError(
+            "Every candidate index must also be retained as a "
+            "continuous index."
+        )
+
+    if "ibi" in configured_candidates:
+        raise ValueError(
+            "IBI must remain excluded from candidate generation."
+        )
+    
+    expected_directions = set(CANDIDATE_INDICES)
+    configured_directions = set(
+        config["classification"]["built_up_direction"]
+    )
+    missing_directions = (
+        expected_directions - configured_directions
+    )
+    unexpected_directions = (
+        configured_directions - expected_directions
+    )
+    if missing_directions or unexpected_directions:
+        raise ValueError(
+            "Classification directions do not match candidate indices. "
+            f"Missing: {sorted(missing_directions)}. "
+            f"Unexpected: {sorted(unexpected_directions)}. "
+            f"Expected: {sorted(expected_directions)}."
+        )
 
 
 def load_ee_geometry(path: Path) -> ee.Geometry:
@@ -225,6 +283,7 @@ def run_preflight(config_path: Path) -> dict[str, Any]:
     """Validate local dependencies and completed source assets."""
     project_root = find_project_root(config_path.parent)
     config = load_yaml(config_path)
+    validate_index_configuration(config)
     inputs = config["inputs"]
     paths = {
         name: resolve_project_path(value, project_root)
@@ -296,8 +355,12 @@ def run_preflight(config_path: Path) -> dict[str, Any]:
         "status": "PASS",
         "completed_epochs": completed["epoch"].tolist(),
         "epoch_count": epoch_count,
-        "continuous_index_layers": epoch_count * 7,
-        "binary_candidate_maps": epoch_count * 5,
+        "continuous_index_layers": (
+            epoch_count * len(CONTINUOUS_INDEX_BANDS)
+        ),
+        "binary_candidate_maps": (
+            epoch_count * len(CANDIDATE_INDICES)
+        ),
         "expected_export_tasks": epoch_count * 2,
         "grid_sha256": stable_object_hash(grid),
         "orchestration_stable_signature": orchestration_version.get(
@@ -333,7 +396,11 @@ def calculate_histograms(
     grid: dict[str, Any],
     config: dict[str, Any],
 ) -> dict[str, Any]:
-    """Calculate all five selected histograms with one reduction per epoch."""
+    """Calculate diagnostic histograms with one reduction per epoch.
+
+    IBI remains in the histogram archive for transparency, but Otsu threshold
+    calculation later iterates only over ``CANDIDATE_INDICES``.
+    """
     minimum = int(
         config["classification"][
             "minimum_valid_observations_for_threshold"
@@ -342,14 +409,14 @@ def calculate_histograms(
     threshold_mask = count_image.select(
         "valid_observation_count"
     ).gte(minimum)
-    selected_stack = ee.Image.cat(
+    diagnostic_stack = ee.Image.cat(
         [
             index_images[name].updateMask(threshold_mask)
-            for name in SELECTED_INDICES
+            for name in CONTINUOUS_INDICES
         ]
-    ).select(SELECTED_INDICES)
+    ).select(CONTINUOUS_INDICES)
 
-    return selected_stack.reduceRegion(
+    return diagnostic_stack.reduceRegion(
         reducer=histogram_reducer(config),
         geometry=core_geometry,
         crs=grid["crs"],
@@ -370,7 +437,7 @@ def candidate_area_statistics(
     one = ee.Image.constant(1)
     bands: list[ee.Image] = []
 
-    for name in SELECTED_INDICES:
+    for name in CANDIDATE_INDICES:
         built = candidate_image.select(f"built_{name}")
         valid = candidate_image.select(f"valid_{name}").eq(1)
 
@@ -653,7 +720,7 @@ def build_all_epoch_bundles(
         epoch_threshold_rows: list[dict[str, Any]] = []
         epoch_failures: list[dict[str, Any]] = []
 
-        for index_name in SELECTED_INDICES:
+        for index_name in CANDIDATE_INDICES:
             result = otsu_from_histogram(histograms.get(index_name))
             epoch_threshold_rows.append(
                 threshold_row(
@@ -783,9 +850,10 @@ def write_pre_export_metadata(
         "minimum_valid_observations_for_candidate": config[
             "classification"
         ]["minimum_valid_observations_for_candidate"],
-        "classification_directions": config["classification"][
-            "built_up_direction"
-        ],
+        "classification_directions": {
+            name: config["classification"]["built_up_direction"][name]
+            for name in CANDIDATE_INDICES
+        },
         "pooled_thresholds_computed": False,
     }
     write_json(recipe_path, recipe)
@@ -934,7 +1002,7 @@ def submit_exports(
             {
                 **index_task,
                 "band_names": ",".join(INDEX_BANDS),
-                "continuous_index_layers": 7,
+                "continuous_index_layers": len(CONTINUOUS_INDEX_BANDS),
                 "binary_candidate_layers": 0,
             }
         )
@@ -964,7 +1032,7 @@ def submit_exports(
                 **candidate_task,
                 "band_names": ",".join(CANDIDATE_BANDS),
                 "continuous_index_layers": 0,
-                "binary_candidate_layers": 5,
+                "binary_candidate_layers": len(CANDIDATE_INDICES),
             }
         )
 

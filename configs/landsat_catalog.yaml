@@ -1,5 +1,5 @@
 catalog:
-  version: 1
+  version: 2
   earth_engine_project: urban-sprawl-ssa
   epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
   diagnostic_years_before: 1
@@ -14,23 +14,64 @@ study_area:
 collections:
   LT05:
     id: LANDSAT/LT05/C02/T1_L2
+    spacecraft: LANDSAT_5
     required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+
   LE07:
     id: LANDSAT/LE07/C02/T1_L2
+    spacecraft: LANDSAT_7
     required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+
   LC08:
     id: LANDSAT/LC08/C02/T1_L2
+    spacecraft: LANDSAT_8
+    required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+
+  LC09:
+    id: LANDSAT/LC09/C02/T1_L2
+    spacecraft: LANDSAT_9
     required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
 
 epoch_sensor_policy:
-  1990: {primary: [LT05], supplemental: [], diagnostic_only: []}
-  1995: {primary: [LT05], supplemental: [], diagnostic_only: []}
-  2000: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
-  2005: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
-  2010: {primary: [LT05], supplemental: [LE07], diagnostic_only: []}
-  2015: {primary: [LC08], supplemental: [LE07], diagnostic_only: []}
-  2020: {primary: [LC08], supplemental: [], diagnostic_only: [LE07]}
-  2025: {primary: [LC08], supplemental: [], diagnostic_only: [LE07]}
+  1990:
+    primary: [LT05]
+    supplemental: []
+    diagnostic_only: []
+
+  1995:
+    primary: [LT05]
+    supplemental: []
+    diagnostic_only: []
+
+  2000:
+    primary: [LT05]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  2005:
+    primary: [LT05]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  2010:
+    primary: [LT05]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  2015:
+    primary: [LC08]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  2020:
+    primary: [LC08]
+    supplemental: []
+    diagnostic_only: [LE07]
+
+  2025:
+    primary: [LC08, LC09]
+    supplemental: []
+    diagnostic_only: [LE07]
 
 quality_mask:
   mask_fill: true
@@ -59,4 +100,4 @@ selection:
 outputs:
   directory: data/metadata/landsat
   report_directory: reports/day2
-  reference_catalog: tests/reference/landsat_catalog_v1.json
+  reference_catalog: tests/reference/landsat_catalog_v2.json

@@ -37,8 +37,10 @@ from src.analysis.built_up.build_candidates import (
 )
 from src.analysis.built_up.indices import (
     CANDIDATE_BANDS,
+    CANDIDATE_INDICES,
+    CONTINUOUS_INDICES,
+    CONTINUOUS_INDEX_BANDS,
     INDEX_BANDS,
-    SELECTED_INDICES,
 )
 from src.analysis.built_up.otsu import histogram_quantile
 
@@ -168,7 +170,7 @@ def validate_candidate_domain_and_masks(
     image = ee.Image(asset_id)
     checks: list[ee.Image] = []
 
-    for name in SELECTED_INDICES:
+    for name in CANDIDATE_INDICES:
         built = image.select(f"built_{name}")
         valid = image.select(f"valid_{name}")
         checks.extend(
@@ -189,7 +191,7 @@ def validate_candidate_domain_and_masks(
         tileScale=int(config["histogram"]["tile_scale"]),
     ).getInfo()
 
-    for name in SELECTED_INDICES:
+    for name in CANDIDATE_INDICES:
         minimum = values.get(f"{name}_built_min")
         maximum = values.get(f"{name}_built_max")
         mismatch = values.get(f"{name}_mask_mismatch_max", 0)
@@ -255,13 +257,13 @@ def create_histogram_gallery(
     epochs = sorted(int(value) for value in histograms)
     figure, axes = plt.subplots(
         len(epochs),
-        len(SELECTED_INDICES),
+        len(CANDIDATE_INDICES),
         figsize=(18, 3.2 * len(epochs)),
         squeeze=False,
     )
 
     for row_index, epoch in enumerate(epochs):
-        for column_index, name in enumerate(SELECTED_INDICES):
+        for column_index, name in enumerate(CANDIDATE_INDICES):
             axis = axes[row_index, column_index]
             histogram = histograms[str(epoch)][name]
             means = np.asarray(histogram["bucketMeans"], dtype=float)
@@ -294,7 +296,7 @@ def index_display_ranges(
     """Calculate robust per-index display ranges shared across all epochs."""
     ranges: dict[str, tuple[float, float]] = {}
 
-    for name in SELECTED_INDICES:
+    for name in CONTINUOUS_INDICES:
         lower = []
         upper = []
 
@@ -317,23 +319,31 @@ def create_map_gallery(
     product_type: str,
     dimensions: int,
 ) -> None:
-    """Create an index or candidate thumbnail gallery from completed assets."""
+    """Create dynamic continuous-index or candidate thumbnail galleries."""
     rows = output_manifest[
         output_manifest["product_type"] == product_type
     ].sort_values("epoch")
     epochs = rows["epoch"].astype(int).tolist()
+    display_indices = (
+        CONTINUOUS_INDICES
+        if product_type == "indices"
+        else CANDIDATE_INDICES
+    )
     ranges = index_display_ranges(histograms)
     figure, axes = plt.subplots(
         len(epochs),
-        len(SELECTED_INDICES),
-        figsize=(16, 3.0 * len(epochs)),
+        len(display_indices),
+        figsize=(
+            3.2 * len(display_indices),
+            3.0 * len(epochs),
+        ),
         squeeze=False,
     )
 
     for row_index, (_, row) in enumerate(rows.iterrows()):
         image = ee.Image(str(row["asset_id"]))
 
-        for column_index, name in enumerate(SELECTED_INDICES):
+        for column_index, name in enumerate(display_indices):
             axis = axes[row_index, column_index]
             axis.set_xticks([])
             axis.set_yticks([])
@@ -341,6 +351,7 @@ def create_map_gallery(
             try:
                 if product_type == "indices":
                     minimum, maximum = ranges[name]
+                    display_image = image.select(name)
                     parameters = {
                         "bands": name,
                         "min": minimum,
@@ -350,17 +361,33 @@ def create_map_gallery(
                         "format": "png",
                     }
                 else:
+                    built = image.select(f"built_{name}")
+                    valid = image.select(f"valid_{name}").eq(1)
+                    display_image = (
+                        ee.Image.constant(2)
+                        .where(valid.And(built.eq(0)), 0)
+                        .where(valid.And(built.eq(1)), 1)
+                        .rename("display")
+                    )
                     parameters = {
-                        "bands": f"built_{name}",
+                        "bands": "display",
                         "min": 0,
-                        "max": 1,
-                        "palette": ["f7f7f7", "d73027"],
+                        "max": 2,
+                        "palette": [
+                            "f7f7f7",
+                            "d73027",
+                            "bdbdbd",
+                        ],
                         "region": exact_grid_region(grid),
                         "dimensions": int(dimensions),
                         "format": "png",
                     }
 
-                axis.imshow(read_thumbnail(image.getThumbURL(parameters)))
+                axis.imshow(
+                    read_thumbnail(
+                        display_image.getThumbURL(parameters)
+                    )
+                )
             except Exception as error:
                 axis.text(
                     0.5,
@@ -380,7 +407,6 @@ def create_map_gallery(
     figure.suptitle(title)
     save_figure(figure, output_path)
 
-
 def write_report(
     output_manifest: pd.DataFrame,
     threshold_table: pd.DataFrame,
@@ -396,8 +422,10 @@ def write_report(
         "",
         f"- Completed epochs: {', '.join(map(str, epochs))}",
         f"- Epoch count: {len(epochs)}",
-        f"- Continuous index layers: {len(epochs) * 7}",
-        f"- Binary candidate maps: {len(epochs) * 5}",
+        f"- Continuous index layers: "
+        f"{len(epochs) * len(CONTINUOUS_INDEX_BANDS)}",
+        f"- Binary candidate maps: "
+        f"{len(epochs) * len(CANDIDATE_INDICES)}",
         f"- Epoch-specific Otsu thresholds: {len(threshold_table)}",
         "",
         "The binary maps are unvalidated candidate pseudo-labels. No index "
@@ -433,6 +461,8 @@ def write_report(
             "- Candidate-area changes are quality diagnostics, not validated growth.",
             "- Invalid index pixels remain masked and are never recoded as non-built.",
             "- No temporal persistence correction or transition map is applied.",
+            "- IBI remains in continuous assets for transparency but is excluded "
+            "from candidate generation and Day 5 method comparison.",
             "- Comparative validation and final method selection belong to the next stage.",
         ]
     )
