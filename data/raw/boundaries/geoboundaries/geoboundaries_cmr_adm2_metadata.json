@@ -1,0 +1,15 @@
+{
+    "created": "2022-01-06T14:04:46.866614",
+    "description": "GeoJSON ADM2 boundaries for Cameroon",
+    "format": "GeoJSON",
+    "download_url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/CMR/ADM2/geoBoundaries-CMR-ADM2.geojson",
+    "id": "4330c229-de2b-4e69-a853-f48764a4bdeb",
+    "last_modified": "2025-08-26T12:50:25",
+    "metadata_modified": "2026-03-07T09:27:23.798691",
+    "microdata": false,
+    "dataset_id": "59c145a6-7ede-4021-96b0-6aff58296d34",
+    "resource_type": "api",
+    "name": "geoBoundaries-CMR-ADM2.geojson",
+    "mimetype": null,
+    "size": "225.6K"
+}

@@ -1,0 +1,46 @@
+catalog_version: 2
+common_window_name: Nov-Jan_3m
+quality_mask:
+  mask_fill: true
+  mask_dilated_cloud: true
+  mask_cirrus_landsat8: true
+  mask_cloud: true
+  mask_cloud_shadow: true
+  mask_snow: true
+  mask_radiometric_saturation: true
+  mask_water: false
+selection_thresholds:
+  minimum_coverage_one_observation_pct: 95.0
+  preferred_coverage_three_observations_pct: 80.0
+  select_shortest_acceptable_window: true
+  coverage_comparison_tolerance_pct: 0.5
+epochs:
+  2025:
+    window_name: Nov-Jan_3m
+    window_start: '2024-11-01'
+    window_end: '2025-02-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LC08
+    - LC09
+    scene_count: 19
+    earth_engine_asset_ids:
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241104
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241112
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241112
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241120
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241120
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241128
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241128
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241206
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241206
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241214
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241214
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241222
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241222
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241230
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241230
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20250107
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20250107
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20250123
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20250131

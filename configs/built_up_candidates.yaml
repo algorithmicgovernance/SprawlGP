@@ -1,0 +1,95 @@
+version: 2
+
+project:
+  earth_engine_project: urban-sprawl-ssa
+
+inputs:
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+  orchestration_version:
+    data/metadata/orchestration/orchestrate_version.json
+  composite_manifest:
+    data/metadata/orchestration/landsat_composite_manifest.csv
+  core_boundary:
+    data/processed/boundaries/yaounde_core.gpkg
+  context_boundary:
+    data/processed/boundaries/yaounde_context_buffer.gpkg
+
+epochs:
+  mode: completed_from_manifest
+  include: [2005, 2010, 2015, 2020, 2025]
+
+indices:
+  formula_version: 1
+  denominator_epsilon: 0.000001
+  savi_l: 0.5
+  intermediate: [savi, mndwi]
+  continuous: [ndbi, ibi, ibui, vbswir1_bi, ndbsui]
+  candidates: [ndbi, ibui, vbswir1_bi, ndbsui]
+
+  excluded_from_candidates:
+    ibi:
+      reason:
+        "Unstable ratio denominator and extreme histogram values."
+      decision:
+        "Retain as a continuous diagnostic band but exclude from Otsu classification and Day 5 method comparison."
+
+classification:
+  primary_strategy: epoch_specific_otsu
+  compute_pooled_common_thresholds: false
+  fail_all_exports_on_threshold_error: true
+
+  threshold_region: core
+  application_region: context
+
+  minimum_valid_observations_for_threshold: 1
+  minimum_valid_observations_for_candidate: 1
+  
+  built_up_direction:
+    ndbi: greater_than
+    ibui: greater_than
+    vbswir1_bi: greater_than
+    ndbsui: greater_than
+
+histogram:
+  max_buckets: 256
+  min_bucket_width: null
+  max_raw: 100000
+  max_pixels: 10000000
+  tile_scale: 4
+
+exports:
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1
+  index_folder: indices
+  candidate_folder: built_up_candidates
+
+  # Change temporarily to true only when replacing existing assets.
+  overwrite_existing_assets: false
+
+  max_pixels: 10000000
+  shard_size: 256
+  priority: 100
+  task_manifest:
+    data/metadata/built_up_candidates/earth_engine_tasks.csv
+
+metadata:
+  directory: data/metadata/built_up_candidates
+  dependency_manifest: dependency_manifest.csv
+  histograms: histograms.json
+  threshold_table: threshold_table.csv
+  candidate_area_summary: candidate_area_summary.csv
+  output_manifest: output_manifest.csv
+  processing_recipe: processing_recipe.json
+  version: built_up_candidates_version.json
+
+reports:
+  directory: reports/built_up_candidates
+  index_gallery: 01_index_gallery.png
+  candidate_gallery: 02_candidate_map_gallery.png
+  histogram_gallery: 03_histogram_threshold_gallery.png
+  report: built_up_candidates_report.md
+  thumbnail_dimensions: 256
+  generate_map_galleries: true
+
+reference:
+  version: tests/reference/built_up_candidates_v2.json

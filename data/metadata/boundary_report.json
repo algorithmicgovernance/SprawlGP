@@ -1,0 +1,83 @@
+{
+  "source_file": "data/raw/boundaries/hdx_cod_ab_cmr/extracted/cmr_admin3.geojson",
+  "source_sha256": "9d7844198b9fcc00509cf916dabbbe616c803774f445c4f9d70736eef20a291c",
+  "input_crs": "EPSG:4326",
+  "analysis_crs": "EPSG:32632",
+  "input_feature_count": 360,
+  "selected_feature_count": 7,
+  "selected_names": [
+    "Yaounde 1er",
+    "Yaounde 2e",
+    "Yaounde 3e",
+    "Yaounde 4e",
+    "Yaounde 5e",
+    "Yaounde 6e",
+    "Yaounde 7e"
+  ],
+  "selected_pcodes": [
+    "CM002007001",
+    "CM002007002",
+    "CM002007003",
+    "CM002007004",
+    "CM002007005",
+    "CM002007006",
+    "CM002007007"
+  ],
+  "parent_name": "Mfoundi",
+  "missing_geometry_count_before_fix": 0,
+  "empty_geometry_count_before_fix": 0,
+  "invalid_geometry_count_before_fix": 0,
+  "duplicate_geometry_count_before_fix": 0,
+  "geometry_types_before_fix": {
+    "Polygon": 357,
+    "MultiPolygon": 3
+  },
+  "geometry_fix_operation": "make_valid",
+  "invalid_core_after_fix": false,
+  "core_area_vector_km2": 289.72898706712,
+  "core_area_rasterised_km2": 289.7181,
+  "relative_vector_raster_area_difference": 3.757672723818094e-05,
+  "context_area_km2": 791.7075129573457,
+  "convex_hull_area_km2": 378.9235951778433,
+  "core_within_context": true,
+  "adm2_adm3_comparison": {
+    "adm3_union_area_km2": 289.72898706712,
+    "adm2_mfoundi_area_km2": 289.7289870671199,
+    "intersection_area_km2": 289.7289870671193,
+    "symmetric_difference_area_km2": 0.0,
+    "symmetric_difference_ratio": 0.0,
+    "adm2_covers_adm3_union": true,
+    "adm3_union_covers_adm2": true
+  },
+  "grid_specification": {
+    "grid_id": "yaounde_epsg32632_30m_anchor0_v1",
+    "grid_version": 1,
+    "crs": "EPSG:32632",
+    "epsg": 32632,
+    "resolution_m": 30.0,
+    "anchor_x_m": 0.0,
+    "anchor_y_m": 0.0,
+    "extent": {
+      "xmin": 762570.0,
+      "ymin": 405810.0,
+      "xmax": 790950.0,
+      "ymax": 444150.0
+    },
+    "width": 946,
+    "height": 1278,
+    "transform": [
+      30.0,
+      0.0,
+      762570.0,
+      0.0,
+      -30.0,
+      444150.0
+    ],
+    "inclusion_rule": "pixel_center",
+    "extent_geometry": "context_buffer",
+    "context_buffer_m": 5000.0,
+    "context_cell_count": 879666,
+    "core_cell_count": 321909,
+    "cell_id_pattern": "EPSG32632_30m_<x-index>_<y-index>"
+  }
+}

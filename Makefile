@@ -1,0 +1,140 @@
+# =============================================================================
+#  Administrative boundaries and study grid
+# =============================================================================
+
+.PHONY: help install inspect-adm2 inspect-adm3 inspect-boundaries build-grid test-grid day1
+
+help:  ## Display this help with a description of all available commands
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+install:  ## Install the package in development mode with dev dependencies
+	python -m pip install -e ".[dev]"
+
+inspect-adm2:  ## Inspect the ADM2 layer and generate the inspection report
+	python -m src.analysis.boundaries.inspect_boundaries \
+		--input data/raw/boundaries/hdx_cod_ab_cmr/extracted/cmr_admin2.geojson \
+		--report data/metadata/source_boundary_inspection_adm2.json
+
+inspect-adm3:  ## Inspect the ADM3 layer and generate the inspection report
+	python -m src.analysis.boundaries.inspect_boundaries \
+		--input data/raw/boundaries/hdx_cod_ab_cmr/extracted/cmr_admin3.geojson \
+		--report data/metadata/source_boundary_inspection_adm3.json
+
+inspect-boundaries: inspect-adm2 inspect-adm3  ## Run both ADM2 and ADM3 inspections
+
+build-grid:  ## Build the study grid from the YAML configuration
+	python -m src.analysis.boundaries.build_study_grid \
+		--config configs/study_area.yaml
+
+visualize-grid: ## Visualize the study grid and generate all diagnostic plots (overview, comparison, masks, and grid alignment) in reports/day1/
+	python -m src.analysis.boundaries.visualize_study_grid \
+		--config configs/study_area.yaml
+
+test-grid:  ## Run pytest on the study grid module
+	pytest tests/test_study_grid.py -v
+
+qa-day1: build-grid visualize-grid test-grid  ## Run the complete QA pipeline (build, visualize, test) without updating the reference baseline
+
+day1: inspect-boundaries build-grid test-grid  ## Run the complete Day 1 pipeline (inspection, grid build, tests)
+
+# =============================================================================
+#  — Landsat catalog and compositing windows
+# =============================================================================
+
+.PHONY: landsat-catalog landsat-visuals test-landsat day2
+
+landsat-catalog: ## Build the full Landsat scene manifest by querying Earth Engine, compute QA metrics, and select optimal compositing windows
+	python -m src.analysis.landsat.build_catalog \
+		--config configs/landsat_catalog.yaml
+
+landsat-visuals: ## Generate diagnostic plots for the Landsat catalog availability and selection strategy (reports/day2/)
+	python -m src.analysis.landsat.visualize_catalog \
+		--config configs/landsat_catalog.yaml
+
+test-landsat: ## Run the pytest suite for the Landsat catalog module with verbose output
+	pytest tests/test_landsat_catalog.py -v
+
+day2: landsat-catalog landsat-visuals test-landsat ## Execute the complete Day 2 pipeline: build the Landsat catalog, generate visualizations, and run tests
+
+# =============================================================================
+#  — Orchestration (Landsat composites, terrain, OSM)
+# =============================================================================
+
+.PHONY: \
+	orchestrate-preflight \
+	orchestrate-submit \
+	orchestrate-status \
+	orchestrate-osm \
+	orchestrate-finalize \
+	test-orchestrate \
+	freeze-orchestrate-v1
+
+orchestrate-preflight: ## Check all frozen Day 1 and Day 2 dependencies (grid, catalog, manifests) before submitting Day 3 exports
+	python -m src.analysis.orchestration.preflight \
+		--config configs/orchestrate_sources.yaml
+
+orchestrate-submit: ## Submit all Earth Engine export tasks for Landsat composites, valid-count layers, and the SRTM terrain product
+	python -m src.analysis.landsat.build_composites \
+		--config configs/orchestrate_sources.yaml \
+		--submit
+
+orchestrate-status:  ## Check the current running/completed status of all submitted Earth Engine export tasks
+	python -m src.analysis.orchestration.finalize \
+		--config configs/orchestrate_sources.yaml \
+		--status-only
+
+orchestrate-osm: ## Download the latest Geofabrik OpenStreetMap extract, clip it to the study area, and save it as a GeoPackage
+	python -m src.analysis.auxiliary.build_osm_extract \
+		--config configs/orchestrate_sources.yaml
+
+orchestrate-finalize: ## Validate the completed Earth Engine assets, generate QA manifests, summary statistics, and finalize Day 3 metadata
+	python -m src.analysis.orchestration.finalize \
+		--config configs/orchestrate_sources.yaml
+
+test-orchestrate: ## Run the pytest suite for the orchestration (Day 3) outputs and dependencies
+	pytest tests/test_orchestrate_sources.py -v
+
+freeze-orchestrate-v1: ## Copy the validated Day 3 version manifest to tests/reference as the frozen baseline for regression tests
+	mkdir -p tests/reference
+	cp data/metadata/orchestration/orchestrate_version.json \
+		tests/reference/orchestrate_sources_v1.json
+
+# =============================================================================
+#  Built-up candidates (spectral indices + Otsu thresholds)
+# =============================================================================
+
+.PHONY: \
+	built-up-preflight \
+	built-up-submit \
+	built-up-status \
+	built-up-finalize \
+	test-built-up \
+	freeze-built-up-v1
+
+built-up-preflight: ## Run preflight checks for Day 4: validate inputs, list completed epochs, and confirm expected index/candidate layers without submitting tasks
+	python -m src.analysis.built_up.build_candidates \
+		--config configs/built_up_candidates.yaml \
+		--preflight-only
+
+built-up-submit: ## Compute spectral indices, calculate Otsu thresholds, and submit all Day 4 Earth Engine exports (indices and candidate masks)
+	python -m src.analysis.built_up.build_candidates \
+		--config configs/built_up_candidates.yaml \
+		--submit
+
+built-up-status:  ## Check the current running/completed status of all submitted Day 4 Earth Engine export tasks
+	python -m src.analysis.built_up.finalize \
+		--config configs/built_up_candidates.yaml \
+		--status-only
+
+built-up-finalize: ## Validate the exported Day 4 assets, generate histograms, threshold tables, area summaries, and the final report
+	python -m src.analysis.built_up.finalize \
+		--config configs/built_up_candidates.yaml
+
+test-built-up: ## Run the pytest suite for the built-up candidates (Day 4) module
+	python -m pytest tests/test_built_up_candidates.py -v
+
+freeze-built-up-v1: ## Copy the validated Day 4 version manifest to tests/reference as the frozen baseline for regression tests
+	mkdir -p tests/reference
+	cp \
+		data/metadata/built_up_candidates/built_up_candidates_version.json \
+		tests/reference/built_up_candidates_v1.json

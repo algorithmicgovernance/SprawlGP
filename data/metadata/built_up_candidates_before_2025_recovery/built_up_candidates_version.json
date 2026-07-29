@@ -1,0 +1,35 @@
+{
+  "binary_candidate_layer_count": 25,
+  "candidate_area_summary_sha256": "0d9a0b41fe08b9383a433d477b873d117f414d134d877145c2cc6d3bad2655b9",
+  "continuous_index_layer_count": 35,
+  "dependency_manifest_sha256": "51273195d56387ebeb655f844f66bbb239308ba6332ff6d01a079d65af97923b",
+  "earth_engine_assets": [
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2025",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2025"
+  ],
+  "grid_specification_sha256": "2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525",
+  "histograms_sha256": "a826db830346f1d7cc93f27a756c2a2a356a5abde85cd3d68f12340cf41c5fde",
+  "orchestration_version_sha256": "2716650fb498ea2cc5f7597c467d93c17d9482cb5de3f2249a02ae5182d7c6f7",
+  "output_manifest_sha256": "6be6c2cd314e377a5f73b82377eede085b57ac9b287b5958300d8edc5a79054f",
+  "pipeline_stage": "built_up_candidates",
+  "pipeline_version": 1,
+  "processed_epochs": [
+    2005,
+    2010,
+    2015,
+    2020,
+    2025
+  ],
+  "processing_recipe_sha256": "186ae55cfc67cefc6a7109e676bb4be5f59dce00eefe1bdef1b6c3f7ad7e017c",
+  "stable_signature": "d0d437043b4c2113c7769c0bae912a754cd7a3383cac15715429962b54847650",
+  "task_manifest_sha256": "4111859d2af577a69e9718d6ef5b22db3dfa81b39863bdcc218b05b4ec0862c4",
+  "threshold_table_sha256": "cfded18084e387b8f227d3a42edc8868f5090e081fc4980ca4ae241714bc3308"
+}

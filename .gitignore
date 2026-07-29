@@ -61,3 +61,42 @@ ENV/
 .cache/
 tmp/
 temp/
+
+# Virtual environments
+.venv/
+.venvt/
+venv/
+env/
+
+# Raw downloaded geospatial data
+data/raw/boundaries/**/*.zip
+data/raw/boundaries/**/*.geojson
+data/raw/boundaries/**/*.shp
+data/raw/boundaries/**/*.shx
+data/raw/boundaries/**/*.dbf
+data/raw/boundaries/**/*.prj
+data/raw/boundaries/**/*.gpkg
+data/raw/boundaries/hdx_cod_ab_cmr/extracted/
+data/metadata/landsat/_checkpoints/
+
+/data/raw/osm/*.zip
+/data/raw/osm/**/*.gpkg
+/data/processed/osm/*.gpkg
+
+# Generated geospatial outputs
+data/processed/**/*.tif
+data/processed/**/*.tiff
+data/processed/**/*.gpkg
+data/processed/**/*.parquet
+
+# Earth Engine resumable catalogue checkpoints
+**/_checkpoints/
+data/metadata/landsat/_checkpoints/
+
+# Temporary geospatial files
+*.aux.xml
+*.ovr
+
+
+
+

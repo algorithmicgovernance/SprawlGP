@@ -1,0 +1,114 @@
+study_area:
+  country: Cameroon
+  city: Yaounde
+  iso3: CMR
+
+boundary:
+  source_name: HDX_COD_AB_CMR
+
+  # Main source used to build the Yaoundé core
+  source_file: data/raw/boundaries/hdx_cod_ab_cmr/extracted/cmr_admin3.geojson
+
+  # ADM2 source used to compare the union of the seven districts
+  # with the Mfoundi department
+  comparison_file: data/raw/boundaries/hdx_cod_ab_cmr/extracted/cmr_admin2.geojson
+
+  # Metadata and checksum of the raw source file
+  metadata_file: data/raw/boundaries/hdx_cod_ab_cmr/cod_ab_cmr_metadata.json
+  checksum_file: checksums.txt
+
+  # GeoJSON: no internal layer to specify
+  layer: null
+
+  administrative_level: 3
+
+  # Field containing the French/main name of ADM3
+  name_field: adm3_name1
+
+  # Exact values observed in the source file
+  selected_names:
+    - "Yaounde 1er"
+    - "Yaounde 2e"
+    - "Yaounde 3e"
+    - "Yaounde 4e"
+    - "Yaounde 5e"
+    - "Yaounde 6e"
+    - "Yaounde 7e"
+
+  # Field identifying the parent department
+  parent_field: adm2_name1
+  parent_name: Mfoundi
+
+  # Stable field allowing optional selection by P-code
+  pcode_field: adm3_pcode
+  selected_pcodes:
+    - CM002007001
+    - CM002007002
+    - CM002007003
+    - CM002007004
+    - CM002007005
+    - CM002007006
+    - CM002007007
+
+  parent_pcode_field: adm2_pcode
+  parent_pcode: CM002007
+
+  expected_selected_units: 7
+  geometry_fix: make_valid
+  dissolve_selected_units: true
+
+comparison_boundary:
+  administrative_level: 2
+  name_field: adm2_name1
+  selected_name: Mfoundi
+  pcode_field: adm2_pcode
+  selected_pcode: CM002007
+
+projection:
+  geographic_crs: EPSG:4326
+  analysis_crs: EPSG:32632
+
+geometries:
+  context_buffer_m: 5000
+  create_convex_hull: true
+
+grid:
+  grid_id: yaounde_epsg32632_30m_anchor0_v1
+  version: 1
+
+  crs: EPSG:32632
+  resolution_m: 30
+  anchor_x_m: 0
+  anchor_y_m: 0
+  inclusion_rule: pixel_center
+  extent_geometry: context_buffer
+  nodata: 0
+
+  # Used only for visual zoom.
+  visual_zoom_half_window_m: 300
+
+  # To be activated after the grid has been officially approved.
+  reference_specification: tests/reference/grid_v1.json
+
+quality_thresholds:
+  adm2_adm3_max_symmetric_difference_ratio: 0.02
+  max_vector_raster_area_difference_ratio: 0.02 
+
+outputs:
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  context_boundary: data/processed/boundaries/yaounde_context_buffer.gpkg
+  convex_hull: data/processed/boundaries/yaounde_convex_hull.gpkg
+
+  adm2_reference_boundary: data/processed/boundaries/mfoundi_adm2_reference.gpkg
+  boundary_comparison_metrics: data/metadata/adm2_adm3_comparison.json
+  visual_report_dir: reports/day1
+
+  grid_template: data/processed/grid/yaounde_grid_30m_template.tif
+  core_mask: data/processed/grid/yaounde_core_mask_30m.tif
+  context_mask: data/processed/grid/yaounde_context_mask_30m.tif
+  cell_table: data/processed/grid/yaounde_cells_30m.parquet
+
+  adm2_inspection_report: data/metadata/source_boundary_inspection_adm2.json
+  adm3_inspection_report: data/metadata/source_boundary_inspection_adm3.json
+  boundary_report: data/metadata/boundary_report.json
+  grid_specification: data/metadata/grid_specification.json

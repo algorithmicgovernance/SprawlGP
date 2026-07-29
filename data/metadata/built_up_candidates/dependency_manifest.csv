@@ -1,0 +1,7 @@
+dependency_name,dependency_path,observed_sha256,status
+grid_specification,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/grid_specification.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
+grid_reference,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/tests/reference/grid_v1.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
+orchestration_version,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/orchestration/orchestrate_version.json,993e0306c5cfb4c7c3a670cec755d0add6f23be90d90cd564774d82afe77a9f5,PASS
+composite_manifest,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/orchestration/landsat_composite_manifest.csv,0c3fb4829163cc503a1906c80214a0853554cf3cf7819a4c496caafb9486b779,PASS
+core_boundary,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/processed/boundaries/yaounde_core.gpkg,8c499234ee75f6d76803c192f62f0e2079d3a87c512bcb28031160b38e37b521,PASS
+context_boundary,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/processed/boundaries/yaounde_context_buffer.gpkg,9e4e810eca96c0079a1495aa6e50ad2e016e50e0cb529a93aa5bf5c9b8ce62b9,PASS

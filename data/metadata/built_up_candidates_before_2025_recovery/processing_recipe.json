@@ -1,0 +1,44 @@
+{
+  "application_region": "context",
+  "candidate_band_schema": [
+    "built_ndbi",
+    "built_ibi",
+    "built_ibui",
+    "built_vbswir1_bi",
+    "built_ndbsui",
+    "valid_ndbi",
+    "valid_ibi",
+    "valid_ibui",
+    "valid_vbswir1_bi",
+    "valid_ndbsui"
+  ],
+  "classification_directions": {
+    "ibi": "greater_than",
+    "ibui": "greater_than",
+    "ndbi": "greater_than",
+    "ndbsui": "greater_than",
+    "vbswir1_bi": "greater_than"
+  },
+  "denominator_epsilon": 1e-06,
+  "formula_version": 1,
+  "grid_sha256": "70534f7aa78e3ac0bd0acdb7f87c8d22a025612b568d908d1e3b761d28ffa43b",
+  "index_band_schema": [
+    "savi",
+    "mndwi",
+    "ndbi",
+    "ibi",
+    "ibui",
+    "vbswir1_bi",
+    "ndbsui",
+    "valid_composite"
+  ],
+  "minimum_valid_observations_for_candidate": 1,
+  "minimum_valid_observations_for_threshold": 1,
+  "pipeline_stage": "built_up_candidates",
+  "pipeline_version": 1,
+  "pooled_thresholds_computed": false,
+  "savi_l": 0.5,
+  "source_orchestration_sha256": "2716650fb498ea2cc5f7597c467d93c17d9482cb5de3f2249a02ae5182d7c6f7",
+  "threshold_region": "core",
+  "threshold_strategy": "epoch_specific_otsu"
+}

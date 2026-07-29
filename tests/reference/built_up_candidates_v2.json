@@ -1,0 +1,35 @@
+{
+  "binary_candidate_layer_count": 20,
+  "candidate_area_summary_sha256": "33e3593f918522a3fe47913da83ca453be6d97bd5c92f8f13d6af13c45ddbe33",
+  "continuous_index_layer_count": 35,
+  "dependency_manifest_sha256": "376fa132fac838180018e5fae1e562c7aae1fd78e3ed4d462bbbccffb67d0724",
+  "earth_engine_assets": [
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/indices/indices_2025",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v1/built_up_candidates/candidates_2025"
+  ],
+  "grid_specification_sha256": "2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525",
+  "histograms_sha256": "8b8e74fc960997af7a7cf664d9c3438acdc44263f90ffd3303c8840298750c8a",
+  "orchestration_version_sha256": "993e0306c5cfb4c7c3a670cec755d0add6f23be90d90cd564774d82afe77a9f5",
+  "output_manifest_sha256": "052e4eba9499e1e39f73a5a20adb749dda41144ab3147e9804eee79d1274f041",
+  "pipeline_stage": "built_up_candidates",
+  "pipeline_version": 2,
+  "processed_epochs": [
+    2005,
+    2010,
+    2015,
+    2020,
+    2025
+  ],
+  "processing_recipe_sha256": "8aec03a5265981f4a1c24fba28790734d878473a66e4b872ca206553518f2937",
+  "stable_signature": "cdf7a1f04c8c00641603c2e8092284ddfbf256ea5442e4e3f49543898f76cd55",
+  "task_manifest_sha256": "d746b0b46677c44218c0e8240c8d2e367099b994319cc0c1b2a55ef8fd4efb86",
+  "threshold_table_sha256": "e4b46d619a2df8665d0c7e7f50c63ca676e93cf63ece3a8f9baf8b5bfc9f7ba2"
+}

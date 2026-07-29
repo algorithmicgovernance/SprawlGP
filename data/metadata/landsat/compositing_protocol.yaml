@@ -1,0 +1,119 @@
+catalog_version: 2
+common_window_name: Jul-Sep_3m
+quality_mask:
+  mask_fill: true
+  mask_dilated_cloud: true
+  mask_cirrus_landsat8: true
+  mask_cloud: true
+  mask_cloud_shadow: true
+  mask_snow: true
+  mask_radiometric_saturation: true
+  mask_water: false
+selection_thresholds:
+  minimum_coverage_one_observation_pct: 95.0
+  preferred_coverage_three_observations_pct: 80.0
+  select_shortest_acceptable_window: true
+  coverage_comparison_tolerance_pct: 0.5
+epochs:
+  1990:
+    window_name: Jul-Sep_3m
+    window_start: '1990-07-01'
+    window_end: '1990-10-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LT05
+    scene_count: 0
+    earth_engine_asset_ids: []
+  1995:
+    window_name: Jul-Sep_3m
+    window_start: '1995-07-01'
+    window_end: '1995-10-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LT05
+    scene_count: 0
+    earth_engine_asset_ids: []
+  2000:
+    window_name: Jul-Sep_3m
+    window_start: '2000-07-01'
+    window_end: '2000-10-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LT05
+    scene_count: 0
+    earth_engine_asset_ids: []
+  2005:
+    window_name: Jul-Sep_3m
+    window_start: '2005-07-01'
+    window_end: '2005-10-01'
+    sensor_mode: primary_plus_supplemental
+    sensor_keys:
+    - LT05
+    - LE07
+    scene_count: 2
+    earth_engine_asset_ids:
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20050719
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20050820
+  2010:
+    window_name: Jul-Sep_3m
+    window_start: '2010-07-01'
+    window_end: '2010-10-01'
+    sensor_mode: primary_plus_supplemental
+    sensor_keys:
+    - LT05
+    - LE07
+    scene_count: 1
+    earth_engine_asset_ids:
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20100919
+  2015:
+    window_name: Jul-Sep_3m
+    window_start: '2015-07-01'
+    window_end: '2015-10-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LC08
+    scene_count: 2
+    earth_engine_asset_ids:
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150707
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20150707
+  2020:
+    window_name: Jul-Sep_3m
+    window_start: '2020-07-01'
+    window_end: '2020-10-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LC08
+    scene_count: 1
+    earth_engine_asset_ids:
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200805
+  2025:
+    window_name: Nov-Jan_3m
+    window_start: '2024-11-01'
+    window_end: '2025-02-01'
+    sensor_mode: primary_only
+    sensor_keys:
+    - LC08
+    - LC09
+    scene_count: 19
+    earth_engine_asset_ids:
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241104
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241112
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241112
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241120
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241120
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241128
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241128
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241206
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241206
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241214
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241214
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241222
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20241222
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241230
+    - LANDSAT/LC09/C02/T1_L2/LC09_185058_20241230
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20250107
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20250107
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20250123
+    - LANDSAT/LC09/C02/T1_L2/LC09_185057_20250131
+    window_exception: true
+    exception_reason: "The original common window (Jul-Sep_3m) provided insufficient valid coverage for 2025. The shortest acceptable fallback window (Nov-Jan_3m) was selected using Landsat 8 and Landsat 9. This exception is explicitly documented for reproducibility."

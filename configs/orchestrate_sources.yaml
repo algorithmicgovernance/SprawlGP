@@ -1,0 +1,116 @@
+version: 2
+
+project:
+  earth_engine_project: urban-sprawl-ssa
+
+inputs:
+  study_area_config: configs/study_area.yaml
+  landsat_catalog_config: configs/landsat_catalog.yaml
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+  selected_scene_manifest: data/metadata/landsat/selected_scene_manifest.csv
+  compositing_protocol: data/metadata/landsat/compositing_protocol.yaml
+  catalog_version: data/metadata/landsat/catalog_version.json
+  catalog_reference: tests/reference/landsat_catalog_v2.json
+
+regions:
+  core: data/processed/boundaries/yaounde_core.gpkg
+  context: data/processed/boundaries/yaounde_context_buffer.gpkg
+
+landsat:
+  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  common_bands: [blue, green, red, nir, swir1, swir2]
+  optical_scale: 0.0000275
+  optical_offset: -0.2
+  composite_reducer: median
+
+exports:
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1
+  landsat_folder: landsat
+  terrain_folder: terrain
+  overwrite_existing_assets: false
+  max_pixels: 10000000
+  shard_size: 256
+  priority: 100
+
+  # Use the exact frozen CRS and transform. Do not add scale or dimensions.
+  use_frozen_transform: true
+
+  reflectance_pyramiding_policy: mean
+  count_pyramiding_policy: sample
+  terrain_pyramiding_policy: mean
+
+  task_manifest: data/metadata/orchestration/earth_engine_tasks.csv
+
+# GHSL is linked through exact public assets and retained on its native grid.
+ghsl:
+  built_collection: JRC/GHSL/P2023A/GHS_BUILT_S
+  built_band: built_surface
+  population_collection: JRC/GHSL/P2023A/GHS_POP
+  population_band: population_count
+  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  preserve_native_grid: true
+  role: auxiliary_benchmark_and_population_source
+  ground_truth: false
+
+srtm:
+  dataset: USGS/SRTMGL1_003
+  elevation_band: elevation
+  output_bands: [elevation_m, slope_degrees]
+  align_to_project_grid: true
+
+# The GeoPackage route avoids a mandatory OSM parser and is the simplest
+# reproducible Geofabrik workflow for Orchestration
+osm:
+  required_for_day3: true
+  provider: Geofabrik
+  source_url: https://download.geofabrik.de/africa/cameroon-latest-free.gpkg.zip
+  raw_directory: data/raw/osm
+  processed_output: data/processed/osm/yaounde_current_osm.gpkg
+  source_metadata: data/raw/osm/source_metadata.json
+  source_checksum: data/raw/osm/source_checksum.sha256
+  output_crs: EPSG:32632
+
+  layers:
+    roads: gis_osm_roads_free
+    railways: gis_osm_railways_free
+    buildings: gis_osm_buildings_a_free
+
+  class_field: fclass
+  selected_road_classes:
+    - motorway
+    - motorway_link
+    - trunk
+    - trunk_link
+    - primary
+    - primary_link
+    - secondary
+    - secondary_link
+    - tertiary
+    - tertiary_link
+
+  selected_railway_classes:
+    - rail
+    - light_rail
+    - tram
+
+metadata:
+  directory: data/metadata/orchestration
+  dependency_manifest: dependency_manifest.csv
+  landsat_composite_manifest: landsat_composite_manifest.csv
+  landsat_epoch_quality: landsat_epoch_quality.csv
+  ghsl_epoch_manifest: ghsl_epoch_manifest.csv
+  ghsl_native_grid: ghsl_native_grid.json
+  auxiliary_source_manifest: auxiliary_source_manifest.csv
+  grid_linkage: grid_linkage.yaml
+  day3_version: orchestrate_version.json
+
+reports:
+  directory: reports/orchestration
+  day3_report: orchestrate_report.md
+  selected_scene_counts_figure: 01_selected_scene_counts.png
+  observation_depth_figure: 02_observation_depth_summary.png
+  source_alignment_figure: 03_source_alignment.png
+
+reference:
+  day3_sources: tests/reference/orchestrate_sources_v2.json

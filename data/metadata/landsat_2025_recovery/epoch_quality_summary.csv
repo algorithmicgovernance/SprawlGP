@@ -1,0 +1,2 @@
+epoch,window_name,number_of_months,window_start,window_end,sensor_mode,sensor_keys,scene_count,coverage_at_least_1_core_pct,coverage_at_least_3_core_pct,supplemental_sensor_used
+2025,Nov-Jan_3m,3,2024-11-01,2025-02-01,primary_only,"LC08,LC09",19,99.99999154731272,92.05031841879325,False

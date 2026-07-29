@@ -1,0 +1,9 @@
+epoch,window_name,number_of_months,window_start,window_end,sensor_mode,sensor_keys,scene_count,coverage_at_least_1_core_pct,coverage_at_least_3_core_pct,supplemental_sensor_used
+1990,Jul-Sep_3m,3,1990-07-01,1990-10-01,primary_only,LT05,0,0.0,0.0,False
+1995,Jul-Sep_3m,3,1995-07-01,1995-10-01,primary_only,LT05,0,0.0,0.0,False
+2000,Jul-Sep_3m,3,2000-07-01,2000-10-01,primary_only,LT05,0,0.0,0.0,False
+2005,Jul-Sep_3m,3,2005-07-01,2005-10-01,primary_plus_supplemental,"LT05,LE07",2,6.479514434271549,0.0,True
+2010,Jul-Sep_3m,3,2010-07-01,2010-10-01,primary_plus_supplemental,"LT05,LE07",1,27.034545800423416,0.0,True
+2015,Jul-Sep_3m,3,2015-07-01,2015-10-01,primary_only,LC08,2,70.05992553901368,0.0,False
+2020,Jul-Sep_3m,3,2020-07-01,2020-10-01,primary_only,LC08,1,31.174148193366612,0.0,False
+2025,Nov-Jan_3m,3,2024-11-01,2025-02-01,primary_only,"LC08,LC09",19,99.99999154731272,92.05031841879324,False
