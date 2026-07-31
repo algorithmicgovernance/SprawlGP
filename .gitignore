@@ -100,3 +100,9 @@ data/metadata/landsat/_checkpoints/
 
 
 
+/data/final/
+/data/staging/
+/reports/exploration_v1/
+/PACKAGE_VALIDATION.json
+**/__pycache__/
+**/.ipynb_checkpoints/

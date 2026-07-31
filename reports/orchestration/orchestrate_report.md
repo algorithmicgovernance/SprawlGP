@@ -26,4 +26,4 @@
 - OpenStreetMap is a contemporary snapshot and not historical evidence.
 - SRTM represents terrain observed approximately around the year 2000.
 
-No spectral index, Otsu threshold or built-up label was generated during Day 3.
+

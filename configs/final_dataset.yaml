@@ -1,0 +1,83 @@
+version: 1
+
+release:
+  dataset_id: yaounde_urban_expansion_30m_v1
+  semantic_version: 1.0.0-provisional
+  release_status: FROZEN_PROVISIONAL_RELEASE
+  mapping_selection_status: PROVISIONAL_PENDING_MANUAL_VALIDATION
+  manual_validation_complete: false
+  protect_existing_release: true
+
+project:
+  earth_engine_project: urban-sprawl-ssa
+
+inputs:
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+  built_up_version: data/metadata/built_up_candidates/built_up_candidates_version.json
+  built_up_output_manifest: data/metadata/built_up_candidates/output_manifest.csv
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  terrain_asset: projects/urban-sprawl-ssa/assets/sprawlgp/v1/terrain/elevation_slope
+
+mapping:
+  selected_index: ndbi
+  candidate_band: built_ndbi
+  validity_band: valid_ndbi
+
+
+  epochs: [2005, 2010, 2015, 2020, 2025]
+  transition_horizon_years: 5
+
+quality:
+  high_confidence_min_observations: 3
+  pairwise_support_warning_pct: 80.0
+  tracking_support_warning_pct: 50.0
+
+predictors:
+  spectral_bands: [blue, green, red, nir, swir1, swir2]
+  spectral_indices: [savi, mndwi, ndbi, ibui, ndbsui]
+  neighbourhood_sizes_pixels: [3, 5, 11]
+  recent_growth_window_pixels: 11
+
+population:
+  collection: JRC/GHSL/P2023A/GHS_POP
+  band: population_count
+
+exports:
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1/final_dataset
+  state_folder: states
+  transition_folder: transitions
+  support_folder: support
+  overwrite_existing_assets: false
+  max_pixels: 10000000
+  shard_size: 256
+  priority: 100
+
+  drive_folder: SprawlGP_v1_cell_time
+  table_file_prefix: cell_time
+
+metadata:
+  directory: data/metadata/final_dataset
+  raster_task_manifest: earth_engine_raster_tasks.csv
+  table_task_manifest: earth_engine_table_tasks.csv
+  raster_output_manifest: raster_output_manifest.csv
+  transition_statistics: transition_statistics.json
+  dependency_manifest: dependency_manifest.csv
+  output_manifest: output_manifest.csv
+  raster_products_version: raster_products_version.json
+  final_dataset_version: final_dataset_version.json
+  checksums: checksums.sha256
+
+outputs:
+  staging_table_directory: data/staging/cell_time_exports
+  staging_tracking_raster: data/staging/final_dataset/tracking_stack.tif
+  final_directory: data/final/yaounde_urban_expansion_30m_v1
+  cell_time_dataset: cell_time_dataset.parquet
+  historical_demand: historical_demand.csv
+  urban_sprawl_metrics: urban_sprawl_metrics.csv
+  primary_feature_schema: primary_feature_schema.yaml
+  data_dictionary: data_dictionary.yaml
+  dataset_card: dataset_card.md
+
+reference:
+  version: tests/reference/final_dataset_v1.json

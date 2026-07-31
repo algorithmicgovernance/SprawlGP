@@ -1,0 +1,76 @@
+version: 1
+
+project:
+  earth_engine_project: urban-sprawl-ssa
+
+inputs:
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+  built_up_version: data/metadata/built_up_candidates/built_up_candidates_version.json
+  output_manifest: data/metadata/built_up_candidates/output_manifest.csv
+  threshold_table: data/metadata/built_up_candidates/threshold_table.csv
+  candidate_area_summary: data/metadata/built_up_candidates/candidate_area_summary.csv
+  orchestration_quality: data/metadata/orchestration/landsat_epoch_quality.csv
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  ghsl_manifest: data/metadata/orchestration/ghsl_epoch_manifest.csv
+  osm_extract: data/processed/osm/yaounde_current_osm.gpkg
+  osm_metadata: data/raw/osm/source_metadata.json
+
+candidate_methods:
+  - ndbi
+  - ibui
+  - vbswir1_bi
+  - ndbsui
+
+excluded_methods:
+  ibi:
+    role: continuous_diagnostic_only
+    reason: unstable_ratio_values
+
+anchor_years:
+  mode: automatic
+  target_count: 3
+  fail_below_core_coverage_pct: 10.0
+  warn_below_core_coverage_pct: 50.0
+  selection_rule: earliest_middle_latest
+
+sampling:
+  random_seed: 20260728
+  minimum_separation_m: 300
+  oversampling_factor: 4
+  per_anchor_year:
+    unanimous_nonbuilt: 20
+    disagreement: 20
+    unanimous_built: 20
+
+manual_review:
+  labels:
+    built: 1
+    nonbuilt: 0
+    uncertain: -1
+  allowed_confidence: [HIGH, MEDIUM, LOW]
+  maximum_reference_offset_years: 2
+  minimum_reviewed_per_anchor_year: 30
+  minimum_pooled_examples_per_class: 20
+
+selection:
+  primary_metric: mean_yearly_weighted_f1
+  tie_tolerance: 0.02
+  first_tie_breaker: minimum_yearly_weighted_f1
+  second_tie_breaker: reversal_rate
+  unresolved_tie: MANUAL_DECISION_REQUIRED
+
+outputs:
+  validation_directory: data/validation
+  metadata_directory: data/metadata/method_selection
+  report_directory: reports/method_selection
+  validation_samples: validation_samples.gpkg
+  manual_labels: manual_labels.csv
+  validation_dataset: validation_dataset.parquet
+  method_scores: method_scores.csv
+  selected_protocol: selected_mapping_protocol.yaml
+  version: method_selection_version.json
+  report: method_selection_report.md
+
+reference:
+  version: tests/reference/method_selection_v1.json

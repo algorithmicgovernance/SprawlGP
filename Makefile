@@ -138,3 +138,103 @@ freeze-built-up-v1: ## Copy the validated Day 4 version manifest to tests/refere
 	cp \
 		data/metadata/built_up_candidates/built_up_candidates_version.json \
 		tests/reference/built_up_candidates_v1.json
+
+
+# =============================================================================
+#  Method selection and validation 
+# =============================================================================
+
+.PHONY: \
+	validation-preflight \
+	validation-samples \
+	validation-evaluate \
+	validation-freeze \
+	test-validation
+
+validation-preflight: ## Verify that all assets and required metadata are available before generating the validation sample
+	python -m src.analysis.validation.select_mapping_method \
+		--config configs/mapping_validation.yaml \
+		--preflight
+
+validation-samples: ## Generate the stratified validation sample (GPKG and blind CSV) for manual built-up labeling
+	python -m src.analysis.validation.select_mapping_method \
+		--config configs/mapping_validation.yaml \
+		--generate-samples
+
+validation-evaluate: ## Merge manual labels, calculate design-weighted validation metrics (F1, reversal rate), and generate method scores
+	python -m src.analysis.validation.select_mapping_method \
+		--config configs/mapping_validation.yaml \
+		--evaluate
+
+validation-freeze: ## Apply the selection rule to freeze the final mapping method and version the selection protocol for next step
+	python -m src.analysis.validation.select_mapping_method \
+		--config configs/mapping_validation.yaml \
+		--freeze
+
+test-validation: ## Run the pytest suite for the method selection (Day 5) module
+	python -m pytest tests/test_method_selection.py -v
+
+
+# =============================================================================
+# Final Dataset — Raster products, tables, metrics and release
+# =============================================================================
+
+.PHONY: \
+	dataset-preflight \
+	dataset-submit-rasters \
+	dataset-status-rasters \
+	dataset-finalize-rasters \
+	dataset-submit-tables \
+	dataset-status-tables \
+	dataset-assemble \
+	dataset-finalize \
+	test-dataset \
+	freeze-dataset-v1
+
+dataset-preflight: ## Validate all (Day 4) candidate assets, the NDBI mapping protocol, and the frozen grid before submitting any Earth Engine exports
+	python -m src.analysis.final_dataset.build_products \
+		--config configs/final_dataset.yaml \
+		--preflight-only
+
+dataset-submit-rasters: ## Submit Earth Engine tasks for the 5 final built-state assets (raw + persistent) and the 4 five-year transition rasters
+	python -m src.analysis.final_dataset.build_products \
+		--config configs/final_dataset.yaml \
+		--submit
+
+dataset-status-rasters: ## Monitor the completion status of the submitted raster export tasks (READY, RUNNING, COMPLETED, or FAILED)
+	python -m src.analysis.final_dataset.build_products \
+		--config configs/final_dataset.yaml \
+		--status-only
+
+dataset-finalize-rasters: ## Validate the exported raster assets (grid alignment, band schema, CRS) and write the raster output manifest
+	python -m src.analysis.final_dataset.build_products \
+		--config configs/final_dataset.yaml \
+		--finalize
+
+dataset-submit-tables: ## Submit four table exports (2005-2010 to 2020-2025) containing eligible-cell feature rows to Google Drive/Cloud Storage as CSV
+	python -m src.analysis.final_dataset.build_tables \
+		--config configs/final_dataset.yaml \
+		--submit
+
+dataset-status-tables: ## Check the batch status of the four submitted table export tasks
+	python -m src.analysis.final_dataset.build_tables \
+		--config configs/final_dataset.yaml \
+		--status-only
+
+dataset-assemble: ## Download the four exported CSVs from staging and merge them into a single consolidated cell-time Parquet dataset
+	python -m src.analysis.final_dataset.build_tables \
+		--config configs/final_dataset.yaml \
+		--assemble
+
+dataset-finalize: ## Compute built area, NUMP, MPS, historical demand, generate the QA report, data dictionary, and freeze the immutable V1 manifest
+	python -m src.analysis.final_dataset.finalize \
+		--config configs/final_dataset.yaml
+
+test-dataset: ## Run the critical pytest suite for the final dataset (leakage, consistency, uniqueness, and spatial support checks)
+	python -m pytest tests/test_final_dataset.py -v
+
+freeze-dataset-v1: ## Copy the authoritative version JSON to the reference directory, pinning the regression baseline for future comparisons
+	cp \
+		data/metadata/final_dataset/final_dataset_version.json \
+		tests/reference/final_dataset_v1.json
+

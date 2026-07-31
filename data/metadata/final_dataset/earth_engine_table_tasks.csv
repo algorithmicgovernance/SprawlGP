@@ -1,0 +1,5 @@
+task_id,state,description,file_prefix,transition_order,period_start,period_end,error_message
+ECYKEI4U64QIROYJIQJHMHKV,COMPLETED,sprawlgp_cell_time_2005_2010,cell_time_2005_2010,0,2005,2010,
+WGPNCPLISALN3BLXMBCSEAPA,COMPLETED,sprawlgp_cell_time_2010_2015,cell_time_2010_2015,1,2010,2015,
+ORNSGSZJFNK4HPLQ6KXRJPHR,COMPLETED,sprawlgp_cell_time_2015_2020,cell_time_2015_2020,2,2015,2020,
+TME5STIBGMM65SWX64GHOH67,COMPLETED,sprawlgp_cell_time_2020_2025,cell_time_2020_2025,3,2020,2025,
