@@ -106,3 +106,4 @@ data/metadata/landsat/_checkpoints/
 /PACKAGE_VALIDATION.json
 **/__pycache__/
 **/.ipynb_checkpoints/
+*.gpkg
