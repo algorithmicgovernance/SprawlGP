@@ -107,3 +107,9 @@ data/metadata/landsat/_checkpoints/
 **/__pycache__/
 **/.ipynb_checkpoints/
 *.gpkg
+/data/metadata/**/_checkpoints/
+/data/metadata/landsat/*.parquet
+/reports/exploration_v*/
+/.pytest_cache/
+/src/*.egg-info/
+/data/metadata/landsat/_checkpoints/

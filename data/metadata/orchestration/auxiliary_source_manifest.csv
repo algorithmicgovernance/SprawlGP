@@ -1,4 +1,0 @@
-source,asset_id,representation,temporal_representation,intended_role
-SRTM,projects/urban-sprawl-ssa/assets/sprawlgp/v1/terrain/elevation_slope,exact_project_grid,static_approximately_2000,elevation_and_slope_predictors
-GHSL,see_ghsl_epoch_manifest.csv,native_100m_grid,8_configured_epochs,auxiliary_benchmark_and_population
-OpenStreetMap,data/processed/osm/yaounde_current_osm.gpkg,vector_EPSG32632,current_snapshot,recent_validation_and_accessibility
