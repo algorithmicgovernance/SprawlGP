@@ -1,0 +1,3 @@
+epoch,sensor_count_band,mean_observations_all_core,median_observations_all_core,coverage_pct_of_core
+2025,valid_count_lc08,3.7674981151525158,3.0,99.33001838670194
+2025,valid_count_lc09,4.13540957501303,4.0,99.88790246093372
