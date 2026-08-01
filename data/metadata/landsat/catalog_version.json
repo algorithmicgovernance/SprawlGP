@@ -1,7 +1,8 @@
 {
-  "catalog_version": 1,
-  "config_sha256": "197a0d9faf8fa3819efb068bd4a3dbe815fa29cf036c5c1d22404baaed51dd0f",
-  "selected_scene_manifest_sha256": "2325905e823c14352a4f29cea3652d62c1d15ad81a293bda73d826acf2dce321",
-  "compositing_protocol_sha256": "a31dee916b03f507d961be8586623ea01e7c8db8f9395a95638ee7eac973059c",
-  "selected_scene_count": 7
+  "catalog_version": 3,
+  "config_sha256": "a6857ea33a10df41ac522ff90f8f3b16e62233281cc5f235b7039bc1bfd737a7",
+  "selected_scene_manifest_sha256": "14173b8bf871ea6979686a71c042f0cfaac0b508ce251bc5efef7113d679b03b",
+  "compositing_protocol_sha256": "50b3a077e4d4a7c368a7a94ae76db362f6bdd3f01e514281d1a204f1cd3f3e93",
+  "selected_scene_count": 71,
+  "selection_scope": "per_epoch"
 }

@@ -1,9 +1,7 @@
-epoch,window_name,number_of_months,window_start,window_end,sensor_mode,sensor_keys,scene_count,coverage_at_least_1_core_pct,coverage_at_least_3_core_pct,supplemental_sensor_used
-1990,Jul-Sep_3m,3,1990-07-01,1990-10-01,primary_only,LT05,0,0.0,0.0,False
-1995,Jul-Sep_3m,3,1995-07-01,1995-10-01,primary_only,LT05,0,0.0,0.0,False
-2000,Jul-Sep_3m,3,2000-07-01,2000-10-01,primary_only,LT05,0,0.0,0.0,False
-2005,Jul-Sep_3m,3,2005-07-01,2005-10-01,primary_plus_supplemental,"LT05,LE07",2,6.479514434271549,0.0,True
-2010,Jul-Sep_3m,3,2010-07-01,2010-10-01,primary_plus_supplemental,"LT05,LE07",1,27.034545800423416,0.0,True
-2015,Jul-Sep_3m,3,2015-07-01,2015-10-01,primary_only,LC08,2,70.05992553901368,0.0,False
-2020,Jul-Sep_3m,3,2020-07-01,2020-10-01,primary_only,LC08,1,31.174148193366612,0.0,False
-2025,Nov-Jan_3m,3,2024-11-01,2025-02-01,primary_only,"LC08,LC09",19,99.99999154731272,92.05031841879324,False
+epoch,window_name,number_of_months,window_start,window_end,sensor_mode,sensor_keys,supplemental_sensor_used,scene_count,coverage_at_least_1_core_pct,coverage_at_least_3_core_pct,mean_valid_observations_core,median_valid_observations_core,maximum_valid_observations_core,passes_preferred_depth,threshold_passed,selection_status,fallback_reason
+2000,Mar-May_3m,3,2000-03-01,2000-06-01,primary_plus_supplemental,"LT05,LE07",True,6,98.1104681333723,6.191475329109171,1.422839040176823,1.0,6.0,False,True,PASS_SHORTEST_ACCEPTABLE,
+2005,Oct-Dec_3m,3,2005-10-01,2006-01-01,primary_plus_supplemental,"LT05,LE07",True,6,95.52535135995933,16.035019746506038,1.7706585314184489,2.0,5.0,False,True,PASS_SHORTEST_ACCEPTABLE,
+2010,Feb-Jan_12m,12,2009-02-01,2010-02-01,primary_plus_supplemental,"LT05,LE07",True,12,98.64767865801937,57.97834778480141,2.757106816064103,2.9999999999999996,9.0,False,True,PASS_SHORTEST_ACCEPTABLE,
+2015,Mar-May_3m,3,2015-03-01,2015-06-01,primary_plus_supplemental,"LC08,LE07",True,16,98.0794707837374,74.58509079550223,4.0256293575487145,4.0,13.0,False,True,PASS_SHORTEST_ACCEPTABLE,
+2020,Dec-Feb_3m,3,2019-12-01,2020-03-01,primary_only,LC08,False,12,99.88790246095478,99.53555374032248,6.414374007097429,6.000000000000001,12.000000000000004,True,True,PASS_SHORTEST_ACCEPTABLE,
+2025,Nov-Jan_3m,3,2024-11-01,2025-02-01,primary_only,"LC08,LC09",False,19,99.88790246093374,99.86953772836524,7.902907690165546,7.0,18.0,True,True,PASS_SHORTEST_ACCEPTABLE,

@@ -1,5 +1,5 @@
-catalog_version: 2
-common_window_name: Jul-Sep_3m
+catalog_version: 3
+selection_scope: per_epoch
 quality_mask:
   mask_fill: true
   mask_dilated_cloud: true
@@ -10,82 +10,148 @@ quality_mask:
   mask_radiometric_saturation: true
   mask_water: false
 selection_thresholds:
+  scope: per_epoch
   minimum_coverage_one_observation_pct: 95.0
   preferred_coverage_three_observations_pct: 80.0
-  select_shortest_acceptable_window: true
   coverage_comparison_tolerance_pct: 0.5
+  prefer_primary_when_threshold_passed: true
 epochs:
-  1990:
-    window_name: Jul-Sep_3m
-    window_start: '1990-07-01'
-    window_end: '1990-10-01'
-    sensor_mode: primary_only
-    sensor_keys:
-    - LT05
-    scene_count: 0
-    earth_engine_asset_ids: []
-  1995:
-    window_name: Jul-Sep_3m
-    window_start: '1995-07-01'
-    window_end: '1995-10-01'
-    sensor_mode: primary_only
-    sensor_keys:
-    - LT05
-    scene_count: 0
-    earth_engine_asset_ids: []
   2000:
-    window_name: Jul-Sep_3m
-    window_start: '2000-07-01'
-    window_end: '2000-10-01'
-    sensor_mode: primary_only
+    window_name: Mar-May_3m
+    window_start: '2000-03-01'
+    window_end: '2000-06-01'
+    sensor_mode: primary_plus_supplemental
     sensor_keys:
     - LT05
-    scene_count: 0
-    earth_engine_asset_ids: []
+    - LE07
+    scene_count: 6
+    coverage_at_least_1_core_pct: 98.1104681333723
+    coverage_at_least_3_core_pct: 6.191475329109171
+    mean_valid_observations_core: 1.422839040176823
+    median_valid_observations_core: 1.0
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
+    earth_engine_asset_ids:
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20000315
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20000315
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20000502
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20000502
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20000518
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20000518
   2005:
-    window_name: Jul-Sep_3m
-    window_start: '2005-07-01'
-    window_end: '2005-10-01'
+    window_name: Oct-Dec_3m
+    window_start: '2005-10-01'
+    window_end: '2006-01-01'
     sensor_mode: primary_plus_supplemental
     sensor_keys:
     - LT05
     - LE07
-    scene_count: 2
+    scene_count: 6
+    coverage_at_least_1_core_pct: 95.52535135995933
+    coverage_at_least_3_core_pct: 16.035019746506038
+    mean_valid_observations_core: 1.7706585314184489
+    median_valid_observations_core: 2.0
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
     earth_engine_asset_ids:
-    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20050719
-    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20050820
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20051023
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20051108
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20051108
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20051124
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20051226
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20051226
   2010:
-    window_name: Jul-Sep_3m
-    window_start: '2010-07-01'
-    window_end: '2010-10-01'
+    window_name: Feb-Jan_12m
+    window_start: '2009-02-01'
+    window_end: '2010-02-01'
     sensor_mode: primary_plus_supplemental
     sensor_keys:
     - LT05
     - LE07
-    scene_count: 1
+    scene_count: 12
+    coverage_at_least_1_core_pct: 98.64767865801937
+    coverage_at_least_3_core_pct: 57.97834778480141
+    mean_valid_observations_core: 2.757106816064103
+    median_valid_observations_core: 2.9999999999999996
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
     earth_engine_asset_ids:
-    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20100919
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20090220
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20090220
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20090324
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20090324
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20090511
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20090511
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20090527
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20091018
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20091221
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20091221
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20100122
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20100122
   2015:
-    window_name: Jul-Sep_3m
-    window_start: '2015-07-01'
-    window_end: '2015-10-01'
-    sensor_mode: primary_only
+    window_name: Mar-May_3m
+    window_start: '2015-03-01'
+    window_end: '2015-06-01'
+    sensor_mode: primary_plus_supplemental
     sensor_keys:
     - LC08
-    scene_count: 2
+    - LE07
+    scene_count: 16
+    coverage_at_least_1_core_pct: 98.0794707837374
+    coverage_at_least_3_core_pct: 74.58509079550223
+    mean_valid_observations_core: 4.0256293575487145
+    median_valid_observations_core: 4.0
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
     earth_engine_asset_ids:
-    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150707
-    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20150707
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150301
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20150309
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20150309
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20150325
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20150410
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20150410
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150418
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20150418
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20150426
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150504
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20150504
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20150512
+    - LANDSAT/LE07/C02/T1_L2/LE07_185058_20150512
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20150520
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20150520
+    - LANDSAT/LE07/C02/T1_L2/LE07_185057_20150528
   2020:
-    window_name: Jul-Sep_3m
-    window_start: '2020-07-01'
-    window_end: '2020-10-01'
+    window_name: Dec-Feb_3m
+    window_start: '2019-12-01'
+    window_end: '2020-03-01'
     sensor_mode: primary_only
     sensor_keys:
     - LC08
-    scene_count: 1
+    scene_count: 12
+    coverage_at_least_1_core_pct: 99.88790246095478
+    coverage_at_least_3_core_pct: 99.53555374032248
+    mean_valid_observations_core: 6.414374007097429
+    median_valid_observations_core: 6.000000000000001
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
     earth_engine_asset_ids:
-    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200805
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20191209
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20191209
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20191225
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20191225
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200110
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20200110
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200126
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20200126
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200211
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20200211
+    - LANDSAT/LC08/C02/T1_L2/LC08_185057_20200227
+    - LANDSAT/LC08/C02/T1_L2/LC08_185058_20200227
   2025:
     window_name: Nov-Jan_3m
     window_start: '2024-11-01'
@@ -95,6 +161,13 @@ epochs:
     - LC08
     - LC09
     scene_count: 19
+    coverage_at_least_1_core_pct: 99.88790246093374
+    coverage_at_least_3_core_pct: 99.86953772836524
+    mean_valid_observations_core: 7.902907690165546
+    median_valid_observations_core: 7.0
+    threshold_passed: true
+    selection_status: PASS_SHORTEST_ACCEPTABLE
+    fallback_reason: ''
     earth_engine_asset_ids:
     - LANDSAT/LC08/C02/T1_L2/LC08_185057_20241104
     - LANDSAT/LC09/C02/T1_L2/LC09_185057_20241112
@@ -115,5 +188,3 @@ epochs:
     - LANDSAT/LC08/C02/T1_L2/LC08_185058_20250107
     - LANDSAT/LC08/C02/T1_L2/LC08_185057_20250123
     - LANDSAT/LC09/C02/T1_L2/LC09_185057_20250131
-    window_exception: true
-    exception_reason: "The original common window (Jul-Sep_3m) provided insufficient valid coverage for 2025. The shortest acceptable fallback window (Nov-Jan_3m) was selected using Landsat 8 and Landsat 9. This exception is explicitly documented for reproducibility."
