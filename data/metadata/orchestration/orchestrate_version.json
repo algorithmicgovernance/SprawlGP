@@ -1,0 +1,29 @@
+{
+  "catalog_version_sha256": "73a504efb0d81a0fba9a673b67cd80fa10e8b78aed11d854cdd7740a89460d2a",
+  "compositing_protocol_sha256": "50b3a077e4d4a7c368a7a94ae76db362f6bdd3f01e514281d1a204f1cd3f3e93",
+  "day3_version": 3,
+  "dependency_manifest_sha256": "5148997f5c383c06304fc1b6060c317b823391fa53b43035860dd314575c7e45",
+  "earth_engine_assets": [
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2000",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2000",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/composite_2025",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/landsat/valid_count_2025",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/terrain/elevation_slope"
+  ],
+  "ghsl_epoch_manifest_sha256": "a72c696665905abc86a9e927c2de8dfd4f7c7643a45a503a4e71f9cccd36add6",
+  "grid_linkage_sha256": "87d33f52f81d5bdcc222f8cda62b2b1b8311a299a2780d8035647182ea9c4d05",
+  "grid_specification_sha256": "2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525",
+  "landsat_composite_manifest_sha256": "90695ae846fd46b6837fd51c11c41a8100eb5cd2fdf3718e54021c02b0a60e07",
+  "landsat_epoch_quality_sha256": "5df9ac4558f168fbeaa505dc8cfa2cc7c3209bc7e7cc8c88e8056501b7b3c6b8",
+  "osm_source_sha256": "a0dfcf623b5d5565238dfc23590842a98edc9fba8301f4eeb9b31510278d8380",
+  "stable_signature": "989b510c183f10b8bec5f8c084849d3901de9e92ad6a4ab69fdf1795541911bf",
+  "task_manifest_sha256": "03cf7b429b476ff01588ca853904fd4ad0ba05da152453f041e1ec56b3aef983"
+}
