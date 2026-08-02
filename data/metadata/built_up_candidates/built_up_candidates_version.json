@@ -1,0 +1,38 @@
+{
+  "binary_candidate_layer_count": 24,
+  "candidate_area_summary_sha256": "05d264961c1991f48cbc8f4de5cbc307f4ce232a935093446cd077579894386b",
+  "continuous_index_layer_count": 42,
+  "dependency_manifest_sha256": "47caf7e02519b32d66373d3cd10b5ec945440452d2040a5aced1c41e05cc1716",
+  "earth_engine_assets": [
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2000",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2000",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2005",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2010",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2015",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2020",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/indices/indices_2025",
+    "projects/urban-sprawl-ssa/assets/sprawlgp/v2/built_up_candidates/candidates_2025"
+  ],
+  "grid_specification_sha256": "2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525",
+  "histograms_sha256": "1752deb3dcb96c17b679d87d6ab6642295552429b6efdc79b7a9effe94c2c887",
+  "orchestration_version_sha256": "9d455e62bd4cff26916f7c9af4b71fe54007451ee32248096393d67758ddaf15",
+  "output_manifest_sha256": "7fcf8ab17a7d505f97aa6df48c9abed3fee8bb76a80810c0e7d6ff5b1c4dd43f",
+  "pipeline_stage": "built_up_candidates",
+  "pipeline_version": 3,
+  "processed_epochs": [
+    2000,
+    2005,
+    2010,
+    2015,
+    2020,
+    2025
+  ],
+  "processing_recipe_sha256": "e046b5ee7041388963131b0fd1cf4dd79732809fa98807a556f9343a1e2cfdb0",
+  "stable_signature": "2af1b0be8db78c9a35417e9db4d7d3132e68e9f9ea38887f272f885ccb9874b0",
+  "task_manifest_sha256": "09310c6285be9901b5349eee8433d07995a4dd13a37e1d0ac79070133be24405",
+  "threshold_table_sha256": "29eaa3e226d9c475aadf25aebfc256484e0478b0c140ca771ef025b7ccefa671"
+}

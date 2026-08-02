@@ -87,7 +87,7 @@ include = "\\.pyi?$"
 minversion = "8.0"
 addopts = "-ra"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["."]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
