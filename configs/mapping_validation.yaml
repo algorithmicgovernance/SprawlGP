@@ -29,7 +29,7 @@ excluded_methods:
 
 anchor_years:
   mode: automatic
-  target_count: 3
+  target_count: 6 # Years
   fail_below_core_coverage_pct: 10.0
   warn_below_core_coverage_pct: 50.0
   selection_rule: earliest_middle_latest
@@ -39,9 +39,10 @@ sampling:
   minimum_separation_m: 300
   oversampling_factor: 4
   per_anchor_year:
-    unanimous_nonbuilt: 20
-    disagreement: 20
-    unanimous_built: 20
+    unanimous_nonbuilt: 15
+    disagreement: 15
+    unanimous_built: 15  
+  # This gives 45 points per year and covers the entire series = 270 points
 
 manual_review:
   labels:

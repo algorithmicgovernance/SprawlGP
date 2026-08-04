@@ -1,0 +1,66 @@
+cell_time_dataset.parquet:
+  cell_id: Stable row-major identifier on frozen grid version 1.
+  row: Zero-based raster row.
+  column: Zero-based raster column.
+  x_center_m: Cell-centre easting in EPSG:32632 metres.
+  y_center_m: Cell-centre northing in EPSG:32632 metres.
+  longitude: Cell-centre longitude in decimal degrees.
+  latitude: Cell-centre latitude in decimal degrees.
+  transition_order: Chronological index of the five-year transition.
+  transition_id: String identifying the origin and target years.
+  forecast_origin: Year at which predictors are observed.
+  target_year: Five-year target year.
+  target_transition_5y: One when an eligible non-built cell becomes built.
+  transition_quality: Zero ineligible, one valid, two high support.
+  built_state_raw_t: Raw NDBI candidate state at forecast origin.
+  built_state_final_t: Persistence-consistent state at origin.
+  built_state_valid_t: One when the origin state is observed.
+  valid_observation_count_t: Valid Landsat observations at origin.
+  blue_t: Blue surface reflectance at origin.
+  green_t: Green surface reflectance at origin.
+  red_t: Red surface reflectance at origin.
+  nir_t: Near-infrared surface reflectance at origin.
+  swir1_t: First short-wave infrared reflectance at origin.
+  swir2_t: Second short-wave infrared reflectance at origin.
+  savi_t: Soil-adjusted vegetation index at origin.
+  mndwi_t: Modified normalized difference water index at origin.
+  ndbi_t: Normalized difference built-up index at origin.
+  ibui_t: Index-based built-up index at origin.
+  ndbsui_t: Normalized difference built-up and soil index at origin.
+  built_fraction_3x3_t: Built fraction among valid 3x3 neighbours.
+  built_fraction_5x5_t: Built fraction among valid 5x5 neighbours.
+  built_fraction_11x11_t: Built fraction among valid 11x11 neighbours.
+  neighbourhood_valid_fraction_3x3_t: Valid share of 3x3 window.
+  neighbourhood_valid_fraction_5x5_t: Valid share of 5x5 window.
+  neighbourhood_valid_fraction_11x11_t: Valid share of 11x11 window.
+  distance_to_built_m_t: Euclidean distance to origin-year built land.
+  recent_local_growth_5y_t: Local growth fraction in prior transition.
+  recent_local_growth_available_t: One when prior growth is available.
+  elevation_m: SRTM elevation in metres.
+  slope_degrees: SRTM-derived slope in degrees.
+  population_density_t: GHSL inhabitants per square kilometre at origin.
+  population_source_year: GHSL epoch used for the population predictor.
+historical_demand.csv:
+  period_start: Transition origin year.
+  period_end: Transition target year.
+  common_valid_cells: Cells observed at both transition endpoints.
+  common_valid_area_ha: Pairwise common-valid area in hectares.
+  common_valid_pct_of_core: Common-valid share of administrative core.
+  eligible_nonbuilt_cells: Common-valid cells non-built at origin.
+  eligible_nonbuilt_area_ha: Eligible non-built area in hectares.
+  new_built_cells: Eligible cells converted during the transition.
+  observed_new_built_area_ha: Observed converted area in hectares.
+  population_start: Population on pairwise common support at origin.
+  population_end: Population on pairwise common support at target.
+  population_change: Population end minus population start.
+  demand_scope: Spatial support used for demand calculation.
+  quality_flag: Pairwise support quality flag.
+urban_sprawl_metrics.csv:
+  epoch: Built-state epoch.
+  tracking_support_area_ha: Fixed all-epoch valid support area.
+  tracking_support_pct_of_core: Fixed support share of core area.
+  built_area_ha: Built area on the fixed tracking support.
+  pba: Built area divided by fixed tracking support area.
+  nump: Eight-connected built patch count.
+  mps_ha: Mean built patch size in hectares.
+  tracking_quality_flag: Fixed-support quality flag.

@@ -63,8 +63,8 @@ def test_required_epochs_and_landsat9(
 ) -> None:
     """Ensure 2025 and Landsat 9 remain configured."""
     assert config["catalog"]["epochs"] == [
-        1990,
-        1995,
+        # 1990,
+        # 1995,
         2000,
         2005,
         2010,

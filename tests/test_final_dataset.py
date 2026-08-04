@@ -247,6 +247,10 @@ def test_generated_release_when_available(
     cell_time = pd.read_parquet(cell_path)
     demand = pd.read_csv(demand_path)
     metrics = pd.read_csv(metrics_path)
+    
+    # Récupérer les époques depuis la configuration
+    epochs = [int(e) for e in config["mapping"]["epochs"]]
+    expected_transition_count = len(epochs) - 1
 
     assert not cell_time.duplicated(
         ["cell_id", "forecast_origin"]
@@ -258,12 +262,13 @@ def test_generated_release_when_available(
         == cell_time["forecast_origin"].astype(int) + 5
     ).all()
     assert sorted(cell_time["forecast_origin"].unique().tolist()) == [
+        2000,
         2005,
         2010,
         2015,
         2020,
     ]
-    assert len(demand) == 4
+    assert len(demand) ==  len(epochs) - 1
     assert np.allclose(
         demand["observed_new_built_area_ha"],
         demand["new_built_cells"] * 0.09,
@@ -287,6 +292,7 @@ def test_generated_release_when_available(
         )
 
     assert metrics["epoch"].astype(int).tolist() == [
+        2000,
         2005,
         2010,
         2015,
@@ -300,8 +306,8 @@ def test_generated_release_when_available(
     assert version["release_status"] == "FROZEN_PROVISIONAL_RELEASE"
     assert version["mapping_method"] == "ndbi"
     assert version["manual_validation_complete"] is False
-    assert version["state_count"] == 5
-    assert version["transition_count"] == 4
+    assert version["state_count"] == len(epochs)
+    assert version["transition_count"] == expected_transition_count
     assert version["immutable_release"] is True
 
     for line in checksum_path.read_text(encoding="utf-8").splitlines():
