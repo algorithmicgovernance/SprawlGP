@@ -1,8 +1,8 @@
-version: 1
+version: 2
 
 release:
-  dataset_id: yaounde_urban_expansion_30m_v1
-  semantic_version: 1.0.0-provisional
+  dataset_id: yaounde_urban_expansion_30m_v2
+  semantic_version: 2.0.0-provisional
   release_status: FROZEN_PROVISIONAL_RELEASE
   mapping_selection_status: PROVISIONAL_PENDING_MANUAL_VALIDATION
   manual_validation_complete: false
@@ -25,7 +25,7 @@ mapping:
   validity_band: valid_ndbi
 
 
-  epochs: [2005, 2010, 2015, 2020, 2025]
+  epochs: [2000, 2005, 2010, 2015, 2020, 2025]
   transition_horizon_years: 5
 
 quality:
@@ -44,7 +44,7 @@ population:
   band: population_count
 
 exports:
-  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1/final_dataset
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v2/final_dataset
   state_folder: states
   transition_folder: transitions
   support_folder: support
@@ -71,7 +71,7 @@ metadata:
 outputs:
   staging_table_directory: data/staging/cell_time_exports
   staging_tracking_raster: data/staging/final_dataset/tracking_stack.tif
-  final_directory: data/final/yaounde_urban_expansion_30m_v1
+  final_directory: data/final/yaounde_urban_expansion_30m_v2
   cell_time_dataset: cell_time_dataset.parquet
   historical_demand: historical_demand.csv
   urban_sprawl_metrics: urban_sprawl_metrics.csv
@@ -80,4 +80,4 @@ outputs:
   dataset_card: dataset_card.md
 
 reference:
-  version: tests/reference/final_dataset_v1.json
+  version: tests/reference/final_dataset_v2.json

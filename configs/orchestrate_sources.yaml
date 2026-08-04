@@ -1,4 +1,4 @@
-version: 2
+version: 3
 
 project:
   earth_engine_project: urban-sprawl-ssa
@@ -11,21 +11,21 @@ inputs:
   selected_scene_manifest: data/metadata/landsat/selected_scene_manifest.csv
   compositing_protocol: data/metadata/landsat/compositing_protocol.yaml
   catalog_version: data/metadata/landsat/catalog_version.json
-  catalog_reference: tests/reference/landsat_catalog_v2.json
+  catalog_reference: tests/reference/landsat_catalog_v3.json
 
 regions:
   core: data/processed/boundaries/yaounde_core.gpkg
   context: data/processed/boundaries/yaounde_context_buffer.gpkg
 
 landsat:
-  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025] # [2000, 2005, 2010, 2015, 2020, 2025]
   common_bands: [blue, green, red, nir, swir1, swir2]
   optical_scale: 0.0000275
   optical_offset: -0.2
   composite_reducer: median
 
 exports:
-  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v2
   landsat_folder: landsat
   terrain_folder: terrain
   overwrite_existing_assets: false
@@ -48,7 +48,7 @@ ghsl:
   built_band: built_surface
   population_collection: JRC/GHSL/P2023A/GHS_POP
   population_band: population_count
-  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025] # [2000, 2005, 2010, 2015, 2020, 2025]
   preserve_native_grid: true
   role: auxiliary_benchmark_and_population_source
   ground_truth: false
@@ -113,4 +113,4 @@ reports:
   source_alignment_figure: 03_source_alignment.png
 
 reference:
-  day3_sources: tests/reference/orchestrate_sources_v2.json
+  day3_sources: tests/reference/orchestrate_sources_v3.json

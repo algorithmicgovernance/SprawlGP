@@ -32,10 +32,10 @@
   "minimum_valid_observations_for_candidate": 1,
   "minimum_valid_observations_for_threshold": 1,
   "pipeline_stage": "built_up_candidates",
-  "pipeline_version": 2,
+  "pipeline_version": 3,
   "pooled_thresholds_computed": false,
   "savi_l": 0.5,
-  "source_orchestration_sha256": "993e0306c5cfb4c7c3a670cec755d0add6f23be90d90cd564774d82afe77a9f5",
+  "source_orchestration_sha256": "9d455e62bd4cff26916f7c9af4b71fe54007451ee32248096393d67758ddaf15",
   "threshold_region": "core",
   "threshold_strategy": "epoch_specific_otsu"
 }

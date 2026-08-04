@@ -1,6 +1,7 @@
 {
-  "dataset_id": "yaounde_urban_expansion_30m_v1",
+  "dataset_id": "yaounde_urban_expansion_30m_v2",
   "epochs": [
+    2000,
     2005,
     2010,
     2015,
@@ -10,11 +11,11 @@
   "grid_sha256": "70534f7aa78e3ac0bd0acdb7f87c8d22a025612b568d908d1e3b761d28ffa43b",
   "mapping_method": "ndbi",
   "mapping_selection_status": "PROVISIONAL_PENDING_MANUAL_VALIDATION",
-  "output_manifest_sha256": "916e8cacb86d801417dfb645311fb30386c034a09eaef2b2ca9548de4f6b6da5",
+  "output_manifest_sha256": "064fb3384a48d8e935f6f5b04d0957734cce1cac5679a7a45117c3de2fe06dee",
   "pipeline_stage": "final_dataset_rasters",
-  "pipeline_version": 1,
-  "stable_signature": "91df82a2499a5f714831f571def781ab7485aedf83b631253eb8b5802596ceca",
-  "state_count": 5,
+  "pipeline_version": 2,
+  "stable_signature": "11b00121e5e900598f3815a02b681ef73a4dc8205e3d4321d6c9f965b9013c27",
+  "state_count": 6,
   "tracking_support_count": 1,
-  "transition_count": 4
+  "transition_count": 5
 }

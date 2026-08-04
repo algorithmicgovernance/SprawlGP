@@ -238,3 +238,32 @@ freeze-dataset-v1: ## Copy the authoritative version JSON to the reference direc
 		data/metadata/final_dataset/final_dataset_version.json \
 		tests/reference/final_dataset_v1.json
 
+# ---------------------------------------------------------------------------
+#  local release QA and handover packaging
+# ---------------------------------------------------------------------------
+
+.PHONY: \
+	handover-check \
+	handover-package \
+	handover
+
+handover-check:
+	python -m pytest \
+		tests/test_study_grid.py \
+		tests/test_landsat_catalog.py \
+		tests/test_landsat_catalog_selection.py \
+		tests/test_orchestrate_sources.py \
+		tests/test_built_up_candidates.py \
+		tests/test_method_selection.py \
+		tests/test_final_dataset.py \
+		-v
+	python scripts/package_handover.py \
+		--root . \
+		--check-only
+
+handover-package:
+	python scripts/package_handover.py \
+		--root .
+
+handover: handover-check handover-package
+	@echo " Handover package created in dist/."
