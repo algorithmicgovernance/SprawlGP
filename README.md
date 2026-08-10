@@ -214,6 +214,26 @@ Potential predictors include:
 
 ## Model
 
+### Baseline Models
+**- Logistic Regression baseline**
+
+The model is fixed to L2 Logistic Regression with `C = 0.1`, `lbfgs` and
+`StandardScaler`. 
+
+Historical evaluation uses three chronological folds:
+
+```text
+train 2000              → validate 2005
+train 2000, 2005        → validate 2010
+train 2000, 2005, 2010  → validate 2015
+```
+
+These folds measure temporal generalisation only. The fixed model is then
+refitted on forecast origins `2000, 2005, 2010, 2015`. Forecast origin `2020`
+(`2020→2025`) remains locked for the later common final evaluation.
+
+**- XGBoost baseline**
+
 ### Primary Forecasting Model
 
 **Spatio-Temporal Sparse Variational Gaussian Process (ST-SVGP)**

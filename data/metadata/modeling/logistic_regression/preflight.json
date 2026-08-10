@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "model": "logistic_regression",
+  "role": "selected_baseline",
+  "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
+  "dataset_sha256": "e8ad4a518e00d506ed6c5112c3f65816a13a64cc298819a6d32be01e6fd1ea0e",
+  "dataset_rows": 720605,
+  "features": [
+    "ndbi_t",
+    "savi_t",
+    "distance_to_built_m_t",
+    "built_fraction_11x11_t",
+    "recent_local_growth_5y_t",
+    "elevation_m",
+    "slope_degrees",
+    "log_population_density_t",
+    "x_center_m",
+    "y_center_m"
+  ],
+  "C": 0.1,
+  "rolling_validation_folds": [
+    {
+      "train_origins": [
+        2000
+      ],
+      "validation_origin": 2005
+    },
+    {
+      "train_origins": [
+        2000,
+        2005
+      ],
+      "validation_origin": 2010
+    },
+    {
+      "train_origins": [
+        2000,
+        2005,
+        2010
+      ],
+      "validation_origin": 2015
+    }
+  ],
+  "final_fit_origins": [
+    2000,
+    2005,
+    2010,
+    2015
+  ],
+  "final_test_locked_origins": [
+    2020
+  ],
+  "final_test_evaluated": false,
+  "config_sha256": "dcec000aabe041e5a996fcf269ad0526a4aa1ece45e300be0faf9cb0948c05f0",
+  "split_manifest": "data/metadata/modeling/logistic_regression/temporal_split_manifest.csv"
+}

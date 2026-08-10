@@ -1,0 +1,24 @@
+version: 1
+dataset_path: data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet
+dataset_sha256: d0af7c8aa17feacce97d4a1e25cfffa05cd7d8996373edb5f2c8dbabd12d4e57
+experiment_config: configs/modeling/experiment_v1.yaml
+experiment_config_sha256: 699e46df19ed5110a9577c15ee73f1a40f1dcf4e5c3b4646989a92511648a02a
+target: target_transition_5y
+features:
+- ndbi_t
+- distance_to_built_m_t
+- built_fraction_11x11_t
+- recent_local_growth_5y_t
+- elevation_m
+- slope_degrees
+- x_center_m
+- y_center_m
+- forecast_origin
+excluded_by_design:
+- population_density_t
+- current OSM variables
+- target-year variables
+- transition_quality
+- persistence-correction fields
+calibration_status: RESERVED_FOR_CALIBRATION
+final_test_status: LOCKED_NOT_EVALUATED

@@ -549,27 +549,126 @@ def recent_growth_features(
     return ee.Image.cat([fraction, available])
 
 
+# def population_density(
+#     epoch: int,
+#     config: dict[str, Any],
+# ):
+#     """Return native-cell GHSL population as persons per square kilometre."""
+#     require_earth_engine()
+#     asset_id = f"{config['population']['collection'].rstrip('/')}/{epoch}"
+#     count = ee.Image(asset_id).select(config["population"]["band"])
+#     density = (
+#         count.divide(ee.Image.pixelArea())
+#         .multiply(1_000_000)
+#         .rename("population_density_t")
+#         .unmask(0)
+#         .toFloat()
+#     )
+#     source_year = (
+#         ee.Image.constant(int(epoch))
+#         .rename("population_source_year")
+#         .toInt16()
+#     )
+#     return ee.Image.cat([density, source_year])
+
 def population_density(
     epoch: int,
     config: dict[str, Any],
 ):
-    """Return native-cell GHSL population as persons per square kilometre."""
+    """Return GHSL population density at the forecast origin.
+
+    GHSL ``population_count`` stores inhabitants per native cell. The
+    conversion to inhabitants per square kilometre is therefore performed
+    with the native GHSL pixel area before evaluation on the 30 m project grid.
+
+    Args:
+        epoch: GHSL epoch matching the forecast origin.
+        config: Final-dataset configuration.
+
+    Returns:
+        An image containing ``population_density_t`` and
+        ``population_source_year``.
+
+    Raises:
+        ValueError: If unsupported units or resampling are configured.
+    """
     require_earth_engine()
-    asset_id = f"{config['population']['collection'].rstrip('/')}/{epoch}"
-    count = ee.Image(asset_id).select(config["population"]["band"])
-    density = (
-        count.divide(ee.Image.pixelArea())
-        .multiply(1_000_000)
-        .rename("population_density_t")
-        .unmask(0)
+
+    population_config = config["population"]
+
+    source_unit = population_config.get(
+        "source_unit",
+        "persons_per_native_cell",
+    )
+    output_unit = population_config.get(
+        "output_unit",
+        "persons_per_square_kilometre",
+    )
+    resampling = population_config.get(
+        "resampling",
+        "nearest",
+    )
+
+    if source_unit != "persons_per_native_cell":
+        raise ValueError(
+            "GHSL population_count must be interpreted as "
+            "'persons_per_native_cell'."
+        )
+
+    if output_unit != "persons_per_square_kilometre":
+        raise ValueError(
+            "Only 'persons_per_square_kilometre' is supported."
+        )
+
+    if resampling not in {"nearest", "bilinear"}:
+        raise ValueError(
+            "Population resampling must be 'nearest' or 'bilinear'."
+        )
+
+    asset_id = (
+        f"{population_config['collection'].rstrip('/')}/{int(epoch)}"
+    )
+
+    count = (
+        ee.Image(asset_id)
+        .select(population_config["band"])
         .toFloat()
     )
+
+    # Calculate the area on the native GHSL grid.
+    native_projection = count.projection()
+
+    native_pixel_area_m2 = (
+        ee.Image.pixelArea()
+        .reproject(native_projection)
+        .rename("native_pixel_area_m2")
+    )
+
+    density = (
+        count.divide(native_pixel_area_m2)
+        .multiply(1_000_000.0)
+        .rename("population_density_t")
+        .setDefaultProjection(native_projection)
+    )
+
+    # Nearest preserves the native piecewise-constant density surface.
+    if resampling == "bilinear":
+        density = density.resample("bilinear")
+
+    density = density.unmask(0).toFloat()
+
     source_year = (
         ee.Image.constant(int(epoch))
         .rename("population_source_year")
         .toInt16()
     )
-    return ee.Image.cat([density, source_year])
+
+    return ee.Image.cat(
+        [
+            density,
+            source_year,
+        ]
+    )
 
 
 def build_feature_image(

@@ -267,3 +267,75 @@ handover-package:
 
 handover: handover-check handover-package
 	@echo " Handover package created in dist/."
+
+
+# =============================================================================
+# Baseline modelling — logistic regression experiment
+# =============================================================================
+
+# .PHONY: \
+# 	modeling-preflight \
+# 	modeling-logistic \
+# 	modeling-test \
+# 	modeling-baseline \
+# 	modeling-logistic-v3-preflight \
+# 	modeling-logistic-v3-test \
+# 	modeling-logistic-v3
+
+# modeling-preflight:  ## Validate the experiment configuration, feature schema and temporal split contract without running the training job
+# 	python -m src.models.train_logistic \
+# 		--config configs/modeling/experiment_v1.yaml \
+# 		--preflight-only
+
+# modeling-logistic:  ## Train the baseline Logistic Regression model on the frozen training set and save the fitted pipeline, coefficients and performance metrics
+# 	python -m src.models.train_logistic \
+# 		--config configs/modeling/experiment_v1.yaml
+
+# modeling-test:  ## Run the critical unit tests for the baseline modelling pipeline (split integrity, target masking, feature availability)
+# 	python -m pytest tests/test_modeling.py -v
+
+# modeling-baseline: modeling-preflight modeling-logistic modeling-test  ## Execute the complete baseline modelling workflow: preflight checks, training and tests	
+
+# modeling-logistic-v3-preflight:  ## Validate Logistic Regression v3 inputs and temporal contract without fitting
+# 	python -m src.models.train_logistic_rolling \
+# 		--config configs/modeling/experiment_v3.yaml \
+# 		--preflight-only
+
+# modeling-logistic-v3-test:  ## Run unit tests for population transformation, temporal splits and candidate selection
+# 	python -m pytest \
+# 		tests/test_logistic_rolling.py \
+# 		-v
+
+# modeling-logistic-v3:  ## Select the LR specification with rolling temporal validation and refit on all pre-test periods
+# 	python -m src.models.train_logistic_rolling \
+# 		--config configs/modeling/experiment_v3.yaml
+
+# =============================================================================
+# Modelling — selected Logistic Regression baseline
+# =============================================================================
+
+.PHONY: \
+	modeling-logistic-preflight \
+	modeling-logistic-test \
+	modeling-logistic \
+	modeling-logistic-v1
+
+modeling-logistic-preflight:  ## Validate the selected Logistic Regression baseline without fitting
+	python -m src.models.train_logistic \
+		--config configs/modeling/logistic_regression_experiment.yaml \
+		--preflight-only
+
+modeling-logistic-test:  ## Run tests for the selected baseline and retained V1 experiment
+	python -m pytest \
+		tests/test_logistic.py \
+		tests/logistic_regression/test_experiment_v1.py \
+		-v
+
+modeling-logistic:  ## Evaluate historical folds and fit the selected Logistic Regression baseline
+	python -m src.models.train_logistic \
+		--config configs/modeling/logistic_regression_experiment.yaml
+
+modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression experiment
+	python -m src.models.logistic_regression.experiment_v1 \
+		--config configs/modeling/logistic_regression/experiment_v1.yaml
+

@@ -1,0 +1,47 @@
+version: 1
+
+dataset:
+  path: data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet
+  target: target_transition_5y
+  forecast_origin: forecast_origin
+  target_year: target_year
+  cell_id: cell_id
+
+features:
+  - ndbi_t
+  - distance_to_built_m_t
+  - built_fraction_11x11_t
+  - recent_local_growth_5y_t
+  - elevation_m
+  - slope_degrees
+
+  # Population pressure measured at the forecast origin.
+  # Remove this feature if the GHSL unit audit fails or if temporal
+  # validation shows poorer discrimination or probability calibration.
+  # - population_density_t
+
+  - x_center_m
+  - y_center_m
+  - forecast_origin
+
+splits:
+  train_origins: [2000, 2005]
+  validation_origins: [2010]
+  calibration_origins: [2015]
+  test_origins: [2020]
+
+logistic_regression:
+  penalty: l2
+  solver: lbfgs
+  c_values: [0.1, 1.0, 10.0]
+  max_iter: 1000
+  selection_metric: log_loss
+  random_state: 20260805
+
+outputs:
+  metadata_directory: data/metadata/modeling/logistic_regression/experiments/v1
+  model_directory: artifacts/models/logistic_regression/experiments/v1
+  metrics_directory: reports/modeling/logistic_regression/experiments/v1/metrics
+  predictions_directory: reports/modeling/logistic_regression/experiments/v1/predictions
+
+
