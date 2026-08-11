@@ -1,8 +1,0 @@
-dependency_name,dependency_path,observed_sha256,status
-grid_specification,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/grid_specification.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
-grid_reference,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/tests/reference/grid_v1.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
-selected_scene_manifest,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/landsat/selected_scene_manifest.csv,2325905e823c14352a4f29cea3652d62c1d15ad81a293bda73d826acf2dce321,PASS
-compositing_protocol,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/landsat/compositing_protocol.yaml,a31dee916b03f507d961be8586623ea01e7c8db8f9395a95638ee7eac973059c,PASS
-catalog_version,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/landsat/catalog_version.json,9119010004d8374433ef5517a5c0e95b7037346526dd3859279bc6e3f673867d,PASS
-catalog_reference,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/tests/reference/landsat_catalog_v1.json,9119010004d8374433ef5517a5c0e95b7037346526dd3859279bc6e3f673867d,PASS
-landsat_catalog_config,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/configs/landsat_catalog.yaml,197a0d9faf8fa3819efb068bd4a3dbe815fa29cf036c5c1d22404baaed51dd0f,PASS

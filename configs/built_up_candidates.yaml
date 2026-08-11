@@ -1,4 +1,4 @@
-version: 2
+version: 3
 
 project:
   earth_engine_project: urban-sprawl-ssa
@@ -17,7 +17,7 @@ inputs:
 
 epochs:
   mode: completed_from_manifest
-  include: [2005, 2010, 2015, 2020, 2025]
+  include: [2000, 2005, 2010, 2015, 2020, 2025]
 
 indices:
   formula_version: 1
@@ -25,7 +25,7 @@ indices:
   savi_l: 0.5
   intermediate: [savi, mndwi]
   continuous: [ndbi, ibi, ibui, vbswir1_bi, ndbsui]
-  candidates: [ndbi, ibui, vbswir1_bi, ndbsui]
+  candidates: [ndbi, ibui, vbswir1_bi, ndbsui] # Remove ibi
 
   excluded_from_candidates:
     ibi:
@@ -48,6 +48,7 @@ classification:
   built_up_direction:
     ndbi: greater_than
     ibui: greater_than
+    # ibi: greater_than # To remove
     vbswir1_bi: greater_than
     ndbsui: greater_than
 
@@ -59,7 +60,7 @@ histogram:
   tile_scale: 4
 
 exports:
-  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v1
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v2
   index_folder: indices
   candidate_folder: built_up_candidates
 
@@ -92,4 +93,4 @@ reports:
   generate_map_galleries: true
 
 reference:
-  version: tests/reference/built_up_candidates_v2.json
+  version: tests/reference/built_up_candidates_v3.json

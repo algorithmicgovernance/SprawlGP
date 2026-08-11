@@ -1,0 +1,50 @@
+identifiers:
+- cell_id
+- row
+- column
+- x_center_m
+- y_center_m
+- longitude
+- latitude
+- transition_order
+- transition_id
+- forecast_origin
+- target_year
+spatial_coordinates:
+- x_center_m
+- y_center_m
+temporal_coordinate:
+- forecast_origin
+covariates:
+- built_state_raw_t
+- built_state_final_t
+- built_state_valid_t
+- valid_observation_count_t
+- blue_t
+- green_t
+- red_t
+- nir_t
+- swir1_t
+- swir2_t
+- savi_t
+- mndwi_t
+- ndbi_t
+- ibui_t
+- ndbsui_t
+- built_fraction_3x3_t
+- built_fraction_5x5_t
+- built_fraction_11x11_t
+- neighbourhood_valid_fraction_3x3_t
+- neighbourhood_valid_fraction_5x5_t
+- neighbourhood_valid_fraction_11x11_t
+- distance_to_built_m_t
+- recent_local_growth_5y_t
+- recent_local_growth_available_t
+- elevation_m
+- slope_degrees
+- population_density_t
+- population_source_year
+label:
+- target_transition_5y
+quality:
+- transition_quality

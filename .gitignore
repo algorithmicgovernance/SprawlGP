@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -40,6 +41,7 @@ htmlcov/
 .env
 .env.*
 .venv/
+.venvt/
 venv/
 env/
 ENV/
@@ -62,11 +64,14 @@ ENV/
 tmp/
 temp/
 
-# Virtual environments
-.venv/
-.venvt/
-venv/
-env/
+*.aux.xml
+*.ovr
+PACKAGE_VALIDATION.json
+
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
 # Raw downloaded geospatial data
 data/raw/boundaries/**/*.zip
@@ -77,26 +82,25 @@ data/raw/boundaries/**/*.dbf
 data/raw/boundaries/**/*.prj
 data/raw/boundaries/**/*.gpkg
 data/raw/boundaries/hdx_cod_ab_cmr/extracted/
-data/metadata/landsat/_checkpoints/
+data/raw/osm/**/*.zip
+data/raw/osm/**/*.gpkg
 
-/data/raw/osm/*.zip
-/data/raw/osm/**/*.gpkg
-/data/processed/osm/*.gpkg
-
-# Generated geospatial outputs
+# Generated local geospatial products
 data/processed/**/*.tif
 data/processed/**/*.tiff
 data/processed/**/*.gpkg
 data/processed/**/*.parquet
+data/validation/*.gpkg
 
-# Earth Engine resumable catalogue checkpoints
-**/_checkpoints/
-data/metadata/landsat/_checkpoints/
+# Resumable Earth Engine checkpoints and local Parquet caches
+data/metadata/**/_checkpoints/
+data/metadata/landsat/*.parquet
 
-# Temporary geospatial files
-*.aux.xml
-*.ovr
+# Staging products and large final table
+data/staging/
+data/final/**/*.parquet
 
-
+# Large exploratory outputs
+reports/exploration_v*/
 
 

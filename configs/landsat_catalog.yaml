@@ -1,7 +1,7 @@
 catalog:
   version: 2
   earth_engine_project: urban-sprawl-ssa
-  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  epochs: [2000, 2005, 2010, 2015, 2020, 2025] # Add [1990, 1995] For another area where data exists
   diagnostic_years_before: 1
   diagnostic_years_after: 1
 
@@ -33,16 +33,6 @@ collections:
     required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
 
 epoch_sensor_policy:
-  1990:
-    primary: [LT05]
-    supplemental: []
-    diagnostic_only: []
-
-  1995:
-    primary: [LT05]
-    supplemental: []
-    diagnostic_only: []
-
   2000:
     primary: [LT05]
     supplemental: [LE07]
@@ -92,12 +82,13 @@ candidate_windows:
   allow_cross_year_windows: true
 
 selection:
+  scope: per_epoch # Against the shared window
   minimum_coverage_one_observation_pct: 95.0
   preferred_coverage_three_observations_pct: 80.0
-  select_shortest_acceptable_window: true
   coverage_comparison_tolerance_pct: 0.5
+  prefer_primary_when_threshold_passed: true
 
 outputs:
   directory: data/metadata/landsat
   report_directory: reports/day2
-  reference_catalog: tests/reference/landsat_catalog_v2.json
+  reference_catalog: tests/reference/landsat_catalog_v3.json

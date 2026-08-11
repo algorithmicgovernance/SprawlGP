@@ -1,0 +1,13 @@
+metric,2015,2020,2020_minus_2015
+Catalogue scenes,161.0,162.0,1.0
+Candidate scenes,116.0,64.0,-52.0
+Selected scenes,2.0,1.0,-1.0
+Median scene cloud cover (%),56.285,69.1,12.814999999999998
+Selected-scene footprint (%),99.88790246093374,99.88790246093372,-2.842170943040401e-14
+Coverage with ≥1 observation (%),59.52287199010233,31.174148193387687,-28.348723796714644
+Coverage with ≥3 observations (%),0.0,0.0,0.0
+Median observations across core,1.0,0.0,-1.0
+Median observations on covered pixels,1.0,1.0,0.0
+Valid composite coverage (%),59.52287199010233,31.17414819338768,-28.34872379671465
+Valid NDBI coverage (%),59.52287199010233,31.174148193387687,-28.348723796714644
+Final valid-state coverage (%),59.522871990102324,31.17414819336662,-28.348723796735705
