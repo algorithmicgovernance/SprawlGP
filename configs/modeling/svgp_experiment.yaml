@@ -1,0 +1,102 @@
+model: svgp
+status: first_implementation
+
+dataset:
+  path: data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet
+  target: target_transition_5y
+  forecast_origin: forecast_origin
+  target_year: target_year
+  cell_id: cell_id
+  x_coordinate: x_center_m
+  y_coordinate: y_center_m
+
+# These predictors form the parametric mean:
+#     beta_0 + x^T beta
+#
+# Coordinates and time are intentionally absent here. They enter the GP
+# covariance k_s(s,s') k_t(t,t') instead.
+linear_predictors:
+  - ndbi_t
+  - savi_t
+  - distance_to_built_m_t
+  - built_fraction_11x11_t
+  - recent_local_growth_5y_t
+  - elevation_m
+  - slope_degrees
+  - log_population_density_t
+
+derived_features:
+  log_population_density_t:
+    source: population_density_t
+    transformation: log1p
+
+time:
+  origin_year: 2000
+  step_years: 5
+
+# Four pre-test forecast origins are intentionally retained at this stage.
+# Fold 1 is a cold-start temporal diagnostic: with only origin 2000 in
+# training, the temporal lengthscale is effectively prior/initialisation-led.
+rolling_validation:
+  folds:
+    - train_origins: [2000]
+      validation_origin: 2005
+
+    - train_origins: [2000, 2005]
+      validation_origin: 2010
+
+    - train_origins: [2000, 2005, 2010]
+      validation_origin: 2015
+
+final_fit:
+  origins: [2000, 2005, 2010, 2015]
+
+final_test:
+  origins: [2020]
+  evaluate: false
+
+kernel:
+  family: matern32_separable
+  spatial_initial_lengthscale_km: 2.0
+  temporal_initial_lengthscale_steps: 1.0
+  variance: 1.0
+
+inducing:
+  # M_s spatial support points. Standard SVGP receives the Cartesian product
+  # of these locations with every training time, matching the inducing-grid
+  # interpretation used to connect SVGP and ST-SVGP in Hamelijnck et al.
+  spatial_points: 64 #1024 #512 #128 
+  train_locations: false
+  kmeans_n_init: 10
+
+training:
+  batch_size: 1024
+  iterations: 1000
+  final_iterations: 1200
+  shuffle_buffer: 50000
+
+  # Natural gradient updates q(u); Adam updates kernel and linear-mean
+  # parameters. This mirrors the variational/hyperparameter separation used
+  # in the literature and prepares the later ST-SVGP implementation.
+  # natural_gradient_gamma: 0.01
+
+  # Adam optimizes the complete stochastic SVGP ELBO:
+  # variational posterior q(u), kernel and parametric mean.
+  adam_learning_rate: 0.001
+
+  log_every: 100
+  prediction_batch_size: 8192
+  random_state: 20260809
+
+compute:
+  # Start with CPU + float64 for the reference run.
+  # For Apple Metal testing, use device: auto and float_type: float32.
+  device: auto #cpu
+  float_type: float32 #float64
+  jitter:  1.0e-6 #1.0e-5
+
+outputs:
+  metadata_directory: data/metadata/modeling/svgp
+  model_directory: artifacts/models/svgp
+  metrics_directory: reports/modeling/svgp/metrics
+  predictions_directory: reports/modeling/svgp/predictions

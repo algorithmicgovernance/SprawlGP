@@ -339,3 +339,24 @@ modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression exp
 	python -m src.models.logistic_regression.experiment_v1 \
 		--config configs/modeling/logistic_regression/experiment_v1.yaml
 
+
+# =============================================================================
+# Modelling — Sparse Variational Gaussian Process
+# =============================================================================
+
+.PHONY: \
+	modeling-svgp-preflight \
+	modeling-svgp-test \
+	modeling-svgp
+
+modeling-svgp-preflight:  ## Validate SVGP inputs, chronology and runtime
+	python -m src.models.train_svgp \
+		--config configs/modeling/svgp_experiment.yaml \
+		--preflight-only
+
+modeling-svgp-test:  ## Run the architecture-critical SVGP tests
+	python -m pytest tests/test_svgp.py -v
+
+modeling-svgp:  ## Run rolling SVGP evaluation and fit the four-origin final model
+	python -m src.models.train_svgp \
+		--config configs/modeling/svgp_experiment.yaml
