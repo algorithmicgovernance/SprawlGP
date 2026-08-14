@@ -344,19 +344,65 @@ modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression exp
 # Modelling — Sparse Variational Gaussian Process
 # =============================================================================
 
+# .PHONY: \
+# 	modeling-svgp-preflight \
+# 	modeling-svgp-test \
+# 	modeling-svgp	\
+# 	modeling-svgp-tune \
+# 	modeling-svgp-tune-summary
+
+# modeling-svgp-preflight:  ## Validate SVGP inputs, chronology and runtime
+# 	python -m src.models.train_svgp \
+# 		--config configs/modeling/svgp_experiment.yaml \
+# 		--preflight-only
+
+# modeling-svgp-test:  ## Run the architecture-critical SVGP tests
+# 	python -m pytest tests/test_svgp.py -v
+
+# modeling-svgp:  ## Run rolling SVGP evaluation and fit the four-origin final model
+# 	python -m src.models.train_svgp \
+# 		--config configs/modeling/svgp_experiment.yaml
+
+
+# =============================================================================
+# Modelling — Sparse Variational Gaussian Process
+# =============================================================================
+
 .PHONY: \
 	modeling-svgp-preflight \
-	modeling-svgp-test \
-	modeling-svgp
+	modeling-svgp \
+	modeling-svgp-tune \
+	modeling-svgp-tune-summary \
+	modeling-svgp-natgrad-v1-preflight \
+	modeling-svgp-natgrad-v1 
 
-modeling-svgp-preflight:  ## Validate SVGP inputs, chronology and runtime
+modeling-svgp-preflight:
 	python -m src.models.train_svgp \
 		--config configs/modeling/svgp_experiment.yaml \
 		--preflight-only
 
-modeling-svgp-test:  ## Run the architecture-critical SVGP tests
+modeling-svgp-test:
 	python -m pytest tests/test_svgp.py -v
 
-modeling-svgp:  ## Run rolling SVGP evaluation and fit the four-origin final model
+modeling-svgp:
 	python -m src.models.train_svgp \
 		--config configs/modeling/svgp_experiment.yaml
+
+# Usage:
+# make modeling-svgp-tune CANDIDATE=natgrad_g1e4
+modeling-svgp-tune:
+	python -m src.models.tune_svgp \
+		--candidate $(CANDIDATE)
+
+modeling-svgp-tune-summary:
+	python -m src.models.tune_svgp \
+		--summarize
+
+modeling-svgp-natgrad-v1-preflight:
+	python -m src.models.svgp.natgrad.experiment_v1 \
+		--config configs/modeling/svgp/experiment_v1.yaml \
+		--preflight-only
+
+modeling-svgp-natgrad-v1:
+	python -m src.models.svgp.natgrad.experiment_v1 \
+		--config configs/modeling/svgp/experiment_v1.yaml

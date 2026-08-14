@@ -91,7 +91,7 @@ training:
 compute:
   # Start with CPU + float64 for the reference run.
   # For Apple Metal testing, use device: auto and float_type: float32.
-  device: auto #cpu
+  device: cpu #auto
   float_type: float32 #float64
   jitter:  1.0e-6 #1.0e-5
 

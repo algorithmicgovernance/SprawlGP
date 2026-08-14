@@ -14,7 +14,7 @@ Unlike conventional deterministic forecasting approaches, this framework produce
 
 ## Objectives
 
-- Reconstruct historical urban expansion (1990–2020) from Landsat imagery.
+- Reconstruct historical urban expansion (2000–2025) from Landsat imagery.
 - Quantify urban sprawl using spatial indicators.
 - Forecast future urban sprawl to 2035 using Bayesian spatio-temporal modelling.
 - Quantify predictive uncertainty associated with future urban expansion.
@@ -26,7 +26,7 @@ Unlike conventional deterministic forecasting approaches, this framework produce
 
 ### 1. Historical Urban Mapping
 
-Annual Landsat imagery is processed to reconstruct built-up land dynamics between **1990 and 2020**.
+Annual Landsat imagery is processed to reconstruct built-up land dynamics between **2000 and 2020**.
 
 Outputs include:
 
@@ -69,7 +69,7 @@ Unlike deterministic neural networks or regression models, the ST-SVGP captures 
 ## Workflow
 
 ```text
-Landsat Time Series (1990–2020)
+Landsat Time Series (2000–2025)
             │
             ▼
  Historical Built-up Mapping
@@ -151,7 +151,7 @@ imagery from:
 
 The target observation epochs are:
 
-`1990`, `1995`, `2000`, `2005`, `2010`, `2015` and `2020`.
+`2000`, `2005`, `2010`, `2015`, `2020` and `2025`.
 
 For each epoch, a three-year diagnostic period was queried to assess scene
 availability around the target year. Scene-level QA masking excludes fill,
