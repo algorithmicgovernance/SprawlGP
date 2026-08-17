@@ -26,6 +26,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from .metrics import probabilistic_metrics, validate_probabilities
+from src.feature_engineering.urban_expansion import add_candidate_features
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -64,42 +65,150 @@ def validate_temporal_contract(config: dict[str, Any]) -> None:
         raise ValueError("The final test must remain locked during baseline training.")
 
 
+# def load_dataset(config: dict[str, Any]) -> pd.DataFrame:
+#     """Load the frozen cell-time table and validate the baseline inputs."""
+#     dataset = config["dataset"]
+#     path = Path(dataset["path"])
+#     if not path.is_file():
+#         raise FileNotFoundError(f"Modelling dataset not found: {path}")
+
+#     frame = pd.read_parquet(path)
+#     target = str(dataset["target"])
+#     origin = str(dataset["forecast_origin"])
+#     target_year = str(dataset["target_year"])
+#     cell_id = str(dataset["cell_id"])
+#     population = str(
+#         config["derived_features"]["log_population_density_t"]["source"]
+#     )
+#     raw_features = [
+#         feature
+#         for feature in config["features"]
+#         if feature != "log_population_density_t"
+#     ]
+#     required = {target, origin, target_year, cell_id, population, *raw_features}
+#     missing = sorted(required.difference(frame.columns))
+#     if missing:
+#         raise ValueError("Missing modelling columns: " + ", ".join(missing))
+
+#     if frame.duplicated([cell_id, origin]).any():
+#         raise ValueError(f"Duplicate ({cell_id}, {origin}) rows were detected.")
+
+#     y = pd.to_numeric(frame[target], errors="raise").astype(int)
+#     if set(y.unique()) != {0, 1}:
+#         raise ValueError(f"{target} must contain both binary classes.")
+
+#     origin_values = pd.to_numeric(frame[origin], errors="raise").astype(int)
+#     target_year_values = pd.to_numeric(frame[target_year], errors="raise").astype(int)
+#     if not target_year_values.eq(origin_values + 5).all():
+#         raise ValueError(f"{target_year} must equal {origin} + 5.")
+
+#     expected_origins = {
+#         *[
+#             int(value)
+#             for fold in config["rolling_validation"]["folds"]
+#             for value in fold["train_origins"]
+#         ],
+#         *[
+#             int(fold["validation_origin"])
+#             for fold in config["rolling_validation"]["folds"]
+#         ],
+#         *[int(value) for value in config["final_fit"]["origins"]],
+#         *[int(value) for value in config["final_test"]["origins"]],
+#     }
+#     missing_origins = sorted(expected_origins.difference(set(origin_values.unique())))
+#     if missing_origins:
+#         raise ValueError(f"Configured forecast origins are absent: {missing_origins}")
+
+#     return frame
+
 def load_dataset(config: dict[str, Any]) -> pd.DataFrame:
-    """Load the frozen cell-time table and validate the baseline inputs."""
+    """Load the frozen cell-time table and validate raw model inputs."""
     dataset = config["dataset"]
     path = Path(dataset["path"])
+
     if not path.is_file():
-        raise FileNotFoundError(f"Modelling dataset not found: {path}")
+        raise FileNotFoundError(
+            f"Modelling dataset not found: {path}"
+        )
 
     frame = pd.read_parquet(path)
+
     target = str(dataset["target"])
     origin = str(dataset["forecast_origin"])
     target_year = str(dataset["target_year"])
     cell_id = str(dataset["cell_id"])
-    population = str(
-        config["derived_features"]["log_population_density_t"]["source"]
-    )
+
+    # Derived predictors are created after loading and therefore must not
+    # be required directly from the frozen Parquet table.
+    derived_features = {
+        "log_population_density_t",
+        "log_distance_to_built_m_t",
+        "built_fraction_x_recent_growth_t",
+    }
+
     raw_features = [
-        feature
+        str(feature)
         for feature in config["features"]
-        if feature != "log_population_density_t"
+        if str(feature) not in derived_features
     ]
-    required = {target, origin, target_year, cell_id, population, *raw_features}
-    missing = sorted(required.difference(frame.columns))
+
+    # Raw sources required by shared feature engineering.
+    required = {
+        target,
+        origin,
+        target_year,
+        cell_id,
+        *raw_features,
+        "population_density_t",
+        "distance_to_built_m_t",
+        "built_fraction_11x11_t",
+        "recent_local_growth_5y_t",
+        "slope_degrees",
+    }
+
+    missing = sorted(
+        required.difference(frame.columns)
+    )
+
     if missing:
-        raise ValueError("Missing modelling columns: " + ", ".join(missing))
+        raise ValueError(
+            "Missing modelling columns: "
+            + ", ".join(missing)
+        )
 
-    if frame.duplicated([cell_id, origin]).any():
-        raise ValueError(f"Duplicate ({cell_id}, {origin}) rows were detected.")
+    if frame.duplicated(
+        [cell_id, origin]
+    ).any():
+        raise ValueError(
+            f"Duplicate ({cell_id}, {origin}) rows were detected."
+        )
 
-    y = pd.to_numeric(frame[target], errors="raise").astype(int)
+    y = pd.to_numeric(
+        frame[target],
+        errors="raise",
+    ).astype(int)
+
     if set(y.unique()) != {0, 1}:
-        raise ValueError(f"{target} must contain both binary classes.")
+        raise ValueError(
+            f"{target} must contain both binary classes."
+        )
 
-    origin_values = pd.to_numeric(frame[origin], errors="raise").astype(int)
-    target_year_values = pd.to_numeric(frame[target_year], errors="raise").astype(int)
-    if not target_year_values.eq(origin_values + 5).all():
-        raise ValueError(f"{target_year} must equal {origin} + 5.")
+    origin_values = pd.to_numeric(
+        frame[origin],
+        errors="raise",
+    ).astype(int)
+
+    target_year_values = pd.to_numeric(
+        frame[target_year],
+        errors="raise",
+    ).astype(int)
+
+    if not target_year_values.eq(
+        origin_values + 5
+    ).all():
+        raise ValueError(
+            f"{target_year} must equal {origin} + 5."
+        )
 
     expected_origins = {
         *[
@@ -111,15 +220,29 @@ def load_dataset(config: dict[str, Any]) -> pd.DataFrame:
             int(fold["validation_origin"])
             for fold in config["rolling_validation"]["folds"]
         ],
-        *[int(value) for value in config["final_fit"]["origins"]],
-        *[int(value) for value in config["final_test"]["origins"]],
+        *[
+            int(value)
+            for value in config["final_fit"]["origins"]
+        ],
+        *[
+            int(value)
+            for value in config["final_test"]["origins"]
+        ],
     }
-    missing_origins = sorted(expected_origins.difference(set(origin_values.unique())))
+
+    missing_origins = sorted(
+        expected_origins.difference(
+            set(origin_values.unique())
+        )
+    )
+
     if missing_origins:
-        raise ValueError(f"Configured forecast origins are absent: {missing_origins}")
+        raise ValueError(
+            "Configured forecast origins are absent: "
+            f"{missing_origins}"
+        )
 
     return frame
-
 
 def add_log_population(frame: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
     """Create log1p population density without altering the source column."""
@@ -455,15 +578,54 @@ def train_baseline(
     return model_card
 
 
-def run(config_path: Path, preflight_only: bool = False) -> dict[str, object]:
+# def run(config_path: Path, preflight_only: bool = False) -> dict[str, object]:
+#     """Run preflight and optionally fit the selected baseline."""
+#     config = load_config(config_path)
+#     validate_temporal_contract(config)
+#     frame = add_log_population(load_dataset(config), config)
+#     preflight = write_preflight(frame, config, config_path)
+#     if preflight_only:
+#         return preflight
+#     return train_baseline(frame, config)
+
+def run(
+    config_path: Path,
+    preflight_only: bool = False,
+) -> dict[str, object]:
     """Run preflight and optionally fit the selected baseline."""
     config = load_config(config_path)
     validate_temporal_contract(config)
-    frame = add_log_population(load_dataset(config), config)
-    preflight = write_preflight(frame, config, config_path)
+
+    frame = load_dataset(config)
+
+    # Shared feature engineering creates:
+    # - log_population_density_t
+    # - log_distance_to_built_m_t
+    # - built_fraction_x_recent_growth_t
+    frame = add_candidate_features(frame)
+
+    validate_features(
+        frame,
+        tuple(
+            str(value)
+            for value in config["features"]
+        ),
+        "prepared dataset",
+    )
+
+    preflight = write_preflight(
+        frame,
+        config,
+        config_path,
+    )
+
     if preflight_only:
         return preflight
-    return train_baseline(frame, config)
+
+    return train_baseline(
+        frame,
+        config,
+    )
 
 
 def main() -> None:

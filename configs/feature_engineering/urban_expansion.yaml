@@ -1,0 +1,48 @@
+version: '1.0'
+status: candidate_features_not_selected
+source: existing_cell_time_dataset_only
+base:
+  predictors:
+  - ndbi_t
+  - savi_t
+  - distance_to_built_m_t
+  - built_fraction_11x11_t
+  - recent_local_growth_5y_t
+  - elevation_m
+  - slope_degrees
+  - log_population_density_t
+candidate_sets:
+  nonlinear_core:
+    description: Simple nonlinear transformations using the same data sources.
+    predictors:
+    - ndbi_t
+    - savi_t
+    - log_distance_to_built_m_t
+    - built_fraction_11x11_t
+    - recent_local_growth_5y_t
+    - elevation_m
+    - slope_degrees
+    - slope_squared_t
+    - log_population_density_t
+  interactions:
+    description: Add two interpretable interactions after nonlinear_core.
+    predictors:
+    - ndbi_t
+    - savi_t
+    - log_distance_to_built_m_t
+    - built_fraction_11x11_t
+    - recent_local_growth_5y_t
+    - elevation_m
+    - slope_degrees
+    - slope_squared_t
+    - log_population_density_t
+    - built_fraction_x_recent_growth_t
+    - built_fraction_x_log_population_t
+explicit_exclusions_for_now:
+- new_external_datasets
+- x_center_m_in_linear_mean
+- y_center_m_in_linear_mean
+- forecast_origin_in_linear_mean
+- NDBI_minus_SAVI_redundant_linear_combination
+- multi_scale_neighbourhood_features_requiring_dataset_rebuild
+- temporal_difference_features_requiring_earlier_epoch_design

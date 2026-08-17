@@ -125,6 +125,7 @@ def calibration_intercept_slope(
     logits = np.log(clipped / (1.0 - clipped)).reshape(-1, 1)
 
     model = LogisticRegression(
+        C=np.inf,
         penalty=None,
         solver="lbfgs",
         max_iter=500,

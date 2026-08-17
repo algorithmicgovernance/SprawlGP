@@ -371,6 +371,9 @@ modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression exp
 .PHONY: \
 	modeling-svgp-preflight \
 	modeling-svgp \
+	modeling-probability-evaluation \
+	modeling-svgp-feature \
+	modeling-svgp-feature-summary \
 	modeling-svgp-tune \
 	modeling-svgp-tune-summary \
 	modeling-svgp-natgrad-v1-preflight \
@@ -387,6 +390,20 @@ modeling-svgp-test:
 modeling-svgp:
 	python -m src.models.train_svgp \
 		--config configs/modeling/svgp_experiment.yaml
+
+modeling-probability-evaluation:
+	python -m src.models.evaluation.evaluate_probabilities
+
+# Usage:
+# make modeling-svgp-feature FEATURE_SET=log_distance
+FEATURE_SET ?= base
+modeling-svgp-feature:
+	python -m src.models.svgp.features.experiment \
+		--config configs/modeling/svgp_experiment.yaml \
+		--feature-set $(FEATURE_SET)
+
+modeling-svgp-feature-summary:
+	python -m src.models.svgp.features.experiment --summarize
 
 # Usage:
 # make modeling-svgp-tune CANDIDATE=natgrad_g1e4

@@ -8,15 +8,18 @@ dataset:
   target_year: target_year
   cell_id: cell_id
 
+feature_set: log_distance_growth 
+
 features:
   - ndbi_t
   - savi_t
-  - distance_to_built_m_t
+  - log_distance_to_built_m_t
   - built_fraction_11x11_t
   - recent_local_growth_5y_t
   - elevation_m
   - slope_degrees
   - log_population_density_t
+  - built_fraction_x_recent_growth_t
   - x_center_m
   - y_center_m
 
