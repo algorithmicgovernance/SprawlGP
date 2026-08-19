@@ -26,7 +26,7 @@ Unlike conventional deterministic forecasting approaches, this framework produce
 
 ### 1. Historical Urban Mapping
 
-Annual Landsat imagery is processed to reconstruct built-up land dynamics between **2000 and 2020**.
+Multi-epoch Landsat imagery is processed to reconstruct built-up land dynamics at the target epochs **2000, 2005, 2010, 2015, 2020 and 2025**.
 
 Outputs include:
 
@@ -217,8 +217,50 @@ Potential predictors include:
 ### Baseline Models
 **- Logistic Regression baseline**
 
-The model is fixed to L2 Logistic Regression with `C = 0.1`, `lbfgs` and
-`StandardScaler`. 
+The retained baseline uses chronological rolling validation and the shared
+model-ready feature family. The currently retained feature specification
+includes the built-fraction × recent-growth interaction
+`built_fraction_x_recent_growth_t`.
+
+
+**- XGBoost baselineis deferred** and is not part of the current retained modelling
+comparison.
+
+**Sparse Variational Gaussian Process (SVGP)**
+
+The selected SVGP comparator keeps the Adam-based Bernoulli-probit SVGP
+implementation with `M_s = 64` spatial inducing locations. Controlled feature
+experiments compared:
+
+- `base`;
+- `log_distance`;
+- `log_distance_growth`.
+
+`log_distance_growth` is retained because it gives small but coherent
+pre-test gains in Log Loss, Brier score, PR-AUC and calibration error. Its
+linear mean includes `log_distance_to_built_m_t` and
+`built_fraction_x_recent_growth_t`.
+
+A separate Natural-Gradient SVGP implementation is preserved as a historical
+experiment because it did not outperform the selected Adam SVGP.
+
+### Primary Forecasting Model
+
+**Spatio-Temporal Sparse Variational Gaussian Process (ST-SVGP)**
+
+The current promoted pre-test candidate uses:
+
+- 64 fixed spatial inducing locations;
+- anisotropic spatial Matérn-3/2 covariance;
+- temporal Matérn-3/2 Markov state-space representation;
+- Bernoulli-probit likelihood;
+- dense Gaussian CVI pseudo-sites updated with Natural Gradient;
+- Adam updates for the parametric mean and kernel hyperparameters;
+- sequential Kalman filtering and RTS smoothing.
+
+The temporal lengthscale is initialised at **1.5 five-year steps** and remains
+trainable. The free-init-1.0 and fixed-1.5 variants are retained as diagnostics,
+not as the promoted model.
 
 Historical evaluation uses three chronological folds:
 
@@ -228,15 +270,10 @@ train 2000, 2005        → validate 2010
 train 2000, 2005, 2010  → validate 2015
 ```
 
-These folds measure temporal generalisation only. The fixed model is then
-refitted on forecast origins `2000, 2005, 2010, 2015`. Forecast origin `2020`
-(`2020→2025`) remains locked for the later common final evaluation.
-
-**- XGBoost baseline**
-
-### Primary Forecasting Model
-
-**Spatio-Temporal Sparse Variational Gaussian Process (ST-SVGP)**
+Forecast origin `2020` (`2020→2025`) remains locked and is not used for model
+selection. The current common OOF evaluator compares Logistic Regression,
+Strong SVGP and promoted ST-SVGP on proper scoring rules, discrimination,
+calibration and temporal prediction-set coverage.
 
 Advantages:
 
@@ -300,3 +337,25 @@ If you use this repository in academic work, please cite the associated publicat
 ## License
 
 Specify an appropriate open-source license (e.g., MIT, BSD-3-Clause, or GPL-3.0) before distribution.
+
+<!-- BEGIN ST-SVGP SUMMARY -->
+### Sparse variational spatio-temporal Gaussian process (ST-SVGP)
+
+The current ST-SVGP candidate models five-year non-built-to-built conversion as
+a Bernoulli-probit process with a nine-feature parametric mean and a separable
+Matérn-3/2 residual Gaussian process. Spatial dependence is represented by 64
+fixed inducing locations, while the temporal Matérn-3/2 kernel is written in
+Markov state-space form and inferred with sequential Kalman filtering and RTS
+smoothing. Non-conjugate inference uses dense time-specific Gaussian CVI
+pseudo-sites updated by Natural Gradient; Adam updates the linear mean and
+kernel hyperparameters.
+
+The promoted candidate is configured in `configs/modeling/st_svgp.yaml`. Its
+temporal lengthscale is initialised at 1.5 five-year steps and remains
+trainable. Diagnostic and mathematical-validation configurations remain under
+`configs/modeling/st_svgp/`. The 2020 -> 2025 period remains locked until the
+pre-test protocol and model choices are frozen.
+
+See `docs/modeling_st_svgp.md` for the mathematical validation chain, the 37
+retained tests, rolling validation and retained diagnostics.
+<!-- END ST-SVGP SUMMARY -->

@@ -114,18 +114,59 @@ def build_summary(
     coverage: pd.DataFrame,
 ) -> pd.DataFrame:
     """Aggregate metrics by model for concise comparison."""
+    # metrics_summary = (
+    #     fold_metrics.groupby("model", as_index=False)
+    #     .agg(
+    #         folds=("fold", "nunique"),
+    #         mean_log_loss=("log_loss", "mean"),
+    #         mean_brier_score=("brier_score", "mean"),
+    #         mean_pr_auc=("pr_auc", "mean"),
+    #         mean_roc_auc=("roc_auc", "mean"),
+    #         mean_ece=("ece", "mean"),
+    #         mean_calibration_intercept=("calibration_intercept", "mean"),
+    #         mean_calibration_slope=("calibration_slope", "mean"),
+    #         mean_probability_bias=("probability_bias", "mean"),
+    #     )
+    # )
+    
     metrics_summary = (
         fold_metrics.groupby("model", as_index=False)
         .agg(
             folds=("fold", "nunique"),
+
             mean_log_loss=("log_loss", "mean"),
+            std_log_loss=("log_loss", "std"),
+            worst_log_loss=("log_loss", "max"),
+
             mean_brier_score=("brier_score", "mean"),
+            std_brier_score=("brier_score", "std"),
+            worst_brier_score=("brier_score", "max"),
+
             mean_pr_auc=("pr_auc", "mean"),
+            std_pr_auc=("pr_auc", "std"),
+            worst_pr_auc=("pr_auc", "min"),
+
             mean_roc_auc=("roc_auc", "mean"),
+            std_roc_auc=("roc_auc", "std"),
+            worst_roc_auc=("roc_auc", "min"),
+
             mean_ece=("ece", "mean"),
-            mean_calibration_intercept=("calibration_intercept", "mean"),
-            mean_calibration_slope=("calibration_slope", "mean"),
-            mean_probability_bias=("probability_bias", "mean"),
+            std_ece=("ece", "std"),
+            worst_ece=("ece", "max"),
+
+            mean_calibration_intercept=(
+                "calibration_intercept", "mean"
+            ),
+            mean_calibration_slope=(
+                "calibration_slope", "mean"
+            ),
+
+            mean_probability_bias=(
+                "probability_bias", "mean"
+            ),
+            mean_absolute_probability_bias=(
+                "absolute_probability_bias", "mean"
+            ),
         )
     )
 
@@ -136,18 +177,62 @@ def build_summary(
         metrics_summary["mean_absolute_coverage_gap"] = float("nan")
         return metrics_summary
 
+    # coverage_summary = (
+    #     coverage.groupby("model", as_index=False)
+    #     .agg(
+    #         coverage_folds=("fold", "nunique"),
+    #         mean_empirical_coverage=("empirical_coverage", "mean"),
+    #         mean_absolute_coverage_gap=("absolute_coverage_gap", "mean"),
+    #         mean_average_set_size=("average_set_size", "mean"),
+    #         mean_singleton_rate=("singleton_rate", "mean"),
+    #         mean_both_labels_rate=("both_labels_rate", "mean"),
+    #         mean_empty_set_rate=("empty_set_rate", "mean"),
+    #         mean_positive_class_coverage=("positive_class_coverage", "mean"),
+    #         mean_negative_class_coverage=("negative_class_coverage", "mean"),
+    #     )
+    # )
     coverage_summary = (
         coverage.groupby("model", as_index=False)
         .agg(
             coverage_folds=("fold", "nunique"),
-            mean_empirical_coverage=("empirical_coverage", "mean"),
-            mean_absolute_coverage_gap=("absolute_coverage_gap", "mean"),
-            mean_average_set_size=("average_set_size", "mean"),
-            mean_singleton_rate=("singleton_rate", "mean"),
-            mean_both_labels_rate=("both_labels_rate", "mean"),
-            mean_empty_set_rate=("empty_set_rate", "mean"),
-            mean_positive_class_coverage=("positive_class_coverage", "mean"),
-            mean_negative_class_coverage=("negative_class_coverage", "mean"),
+
+            mean_empirical_coverage=(
+                "empirical_coverage", "mean"
+            ),
+            worst_fold_empirical_coverage=(
+                "empirical_coverage", "min"
+            ),
+
+            mean_absolute_coverage_gap=(
+                "absolute_coverage_gap", "mean"
+            ),
+
+            mean_average_set_size=(
+                "average_set_size", "mean"
+            ),
+            mean_singleton_rate=(
+                "singleton_rate", "mean"
+            ),
+            mean_both_labels_rate=(
+                "both_labels_rate", "mean"
+            ),
+            mean_empty_set_rate=(
+                "empty_set_rate", "mean"
+            ),
+
+            mean_positive_class_coverage=(
+                "positive_class_coverage", "mean"
+            ),
+            worst_positive_class_coverage=(
+                "positive_class_coverage", "min"
+            ),
+
+            mean_negative_class_coverage=(
+                "negative_class_coverage", "mean"
+            ),
+            worst_negative_class_coverage=(
+                "negative_class_coverage", "min"
+            ),
         )
     )
 
@@ -160,7 +245,7 @@ def run(
     n_bins: int = 10,
     strategy: str = "quantile",
 ) -> dict[str, str]:
-    """Run evaluation for LR and selected SVGP-Adam from saved OOF predictions."""
+    """Run one shared OOF evaluation for LR, Strong SVGP and promoted ST-SVGP."""
     output_directory.mkdir(parents=True, exist_ok=True)
 
     models = [
@@ -172,10 +257,17 @@ def run(
             ),
         ),
         ModelInput(
-            name="svgp_adam",
+            name="svgp_strong",
             path=Path(
-                "reports/modeling/svgp/predictions/"
-                "svgp_oof_predictions.parquet"
+                "reports/modeling/svgp/features/log_distance_growth/"
+                "svgp_feature_oof_predictions.parquet"
+            ),
+        ),
+        ModelInput(
+            name="st_svgp",
+            path=Path(
+                "reports/modeling/st_svgp/predictions/"
+                "st_svgp_oof_predictions.parquet"
             ),
         ),
     ]

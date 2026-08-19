@@ -1,0 +1,31 @@
+experiment: cvi_natgrad_validation
+
+# Final mathematical validation before the full spatial ST-SVGP training loop.
+# The temporal Matérn-3/2 prior and Kalman/RTS machinery are already validated.
+dtype: float64
+
+temporal_kernel:
+  family: matern32_markov
+  lengthscale_steps: 1.5
+  variance: 1.0
+
+synthetic_binary_data:
+  times: [0.0, 0.5, 1.2, 2.0, 3.3]
+  targets: [0, 1, 1, 0, 1]
+
+cvi:
+  quadrature_degree: 40
+  natural_gradient_gamma: 0.2
+  initial_site_precision: 1.0e-3
+  iterations: 25
+
+tolerances:
+  posterior_mean_atol: 1.0e-10
+  posterior_variance_atol: 1.0e-10
+  gaussian_site_log_marginal_atol: 1.0e-10
+  elbo_identity_atol: 1.0e-10
+  finite_difference_gradient_atol: 1.0e-5
+  covariance_psd_tol: 1.0e-10
+
+output:
+  path: reports/modeling/st_svgp/cvi_natgrad_validation.json

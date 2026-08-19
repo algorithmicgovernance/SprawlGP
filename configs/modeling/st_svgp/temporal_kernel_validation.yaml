@@ -1,0 +1,27 @@
+experiment: temporal_kernel_validation
+
+# This is a mathematical validation experiment, not a training configuration.
+# One temporal unit corresponds to one five-year forecast-origin step.
+dtype: float64
+
+temporal_kernel:
+  family: matern32_markov
+  lengthscale_steps: 1.5
+  variance: 1.0
+
+time_grid_steps: [0.0, 1.0, 2.0, 3.0, 4.0]
+check_deltas: [0.0, 0.25, 1.0, 2.5]
+
+tolerances:
+  covariance_atol: 1.0e-10
+  transition_atol: 1.0e-10
+  stationary_atol: 1.0e-10
+  psd_eigenvalue_tol: 1.0e-10
+  gpflow_atol: 1.0e-10
+
+# GPflow is already used by the SVGP pipeline. The cross-check is useful but
+# is not required for the core state-space validation to run.
+require_gpflow: false
+
+output:
+  path: reports/modeling/st_svgp/temporal_kernel_validation.json

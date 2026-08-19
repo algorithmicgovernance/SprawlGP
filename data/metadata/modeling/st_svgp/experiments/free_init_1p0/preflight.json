@@ -1,11 +1,9 @@
 {
   "status": "PASS",
-  "model": "logistic_regression",
-  "role": "selected_baseline",
-  "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
-  "dataset_sha256": "e8ad4a518e00d506ed6c5112c3f65816a13a64cc298819a6d32be01e6fd1ea0e",
-  "dataset_rows": 720605,
-  "features": [
+  "model": "st_svgp",
+  "feature_set": "log_distance_growth",
+  "rows": 720605,
+  "linear_predictors": [
     "ndbi_t",
     "savi_t",
     "log_distance_to_built_m_t",
@@ -14,12 +12,16 @@
     "elevation_m",
     "slope_degrees",
     "log_population_density_t",
-    "built_fraction_x_recent_growth_t",
-    "x_center_m",
-    "y_center_m"
+    "built_fraction_x_recent_growth_t"
   ],
-  "C": 0.1,
-  "rolling_validation_folds": [
+  "spatial_inducing_points": 64,
+  "inference": {
+    "method": "dense_cvi_natural_gradient",
+    "filtering": "sequential",
+    "smoothing": "rts",
+    "natural_gradient_gamma": 0.01
+  },
+  "rolling_validation": [
     {
       "train_origins": [
         2000
@@ -52,6 +54,9 @@
     2020
   ],
   "final_test_evaluated": false,
-  "config_sha256": "ebf29e79c4b009b8f91269718b8bc7643f385a296418a7a0df9ffd5b7dd0a444",
-  "split_manifest": "data/metadata/modeling/logistic_regression/temporal_split_manifest.csv"
+  "runtime": {
+    "device": "cpu",
+    "float_type": "float64",
+    "jitter": 1e-06
+  }
 }

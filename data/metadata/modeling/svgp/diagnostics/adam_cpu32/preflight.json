@@ -1,24 +1,26 @@
 {
   "status": "PASS",
-  "model": "logistic_regression",
-  "role": "selected_baseline",
+  "model": "svgp",
   "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
   "dataset_sha256": "e8ad4a518e00d506ed6c5112c3f65816a13a64cc298819a6d32be01e6fd1ea0e",
   "dataset_rows": 720605,
-  "features": [
+  "linear_predictors": [
     "ndbi_t",
     "savi_t",
-    "log_distance_to_built_m_t",
+    "distance_to_built_m_t",
     "built_fraction_11x11_t",
     "recent_local_growth_5y_t",
     "elevation_m",
     "slope_degrees",
-    "log_population_density_t",
-    "built_fraction_x_recent_growth_t",
-    "x_center_m",
-    "y_center_m"
+    "log_population_density_t"
   ],
-  "C": 0.1,
+  "gp_inputs": [
+    "x_center_m",
+    "y_center_m",
+    "forecast_origin"
+  ],
+  "kernel": "matern32_separable",
+  "spatial_inducing_points": 64,
   "rolling_validation_folds": [
     {
       "train_origins": [
@@ -52,6 +54,12 @@
     2020
   ],
   "final_test_evaluated": false,
-  "config_sha256": "ebf29e79c4b009b8f91269718b8bc7643f385a296418a7a0df9ffd5b7dd0a444",
-  "split_manifest": "data/metadata/modeling/logistic_regression/temporal_split_manifest.csv"
+  "runtime": {
+    "requested_device": "cpu",
+    "selected_device": "CPU",
+    "physical_gpus_detected": 1,
+    "float_type": "float32",
+    "jitter": 1e-06
+  },
+  "config_sha256": "1df6121650033d61c3a05592cd71e99097e1a142a8bcb22c11edab1eeed7f585"
 }
