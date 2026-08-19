@@ -1,0 +1,5 @@
+observed_outcome,predicted_outcome,cell_count
+Converted,Predicted conversion,8159
+Converted,Predicted non-conversion,6255
+Remained non-built,Predicted conversion,15670
+Remained non-built,Predicted non-conversion,110110

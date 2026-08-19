@@ -104,3 +104,6 @@ data/final/**/*.parquet
 reports/exploration_v*/
 
 
+artifacts/
+data/archive/
+scripts/SprawlGP_local_helpers/

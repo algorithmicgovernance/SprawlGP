@@ -1,0 +1,28 @@
+{
+  "generated_at_utc": "2026-08-18T10:05:30.514448+00:00",
+  "target_coverage": 0.8,
+  "binning": {
+    "n_bins": 10,
+    "strategy": "quantile"
+  },
+  "models": [
+    {
+      "name": "logistic_regression",
+      "oof_path": "reports/modeling/logistic_regression/predictions/logistic_oof_predictions.parquet"
+    },
+    {
+      "name": "svgp_strong",
+      "oof_path": "reports/modeling/svgp/features/log_distance_growth/svgp_feature_oof_predictions.parquet"
+    },
+    {
+      "name": "st_svgp",
+      "oof_path": "reports/modeling/st_svgp/predictions/st_svgp_oof_predictions.parquet"
+    }
+  ],
+  "outputs": {
+    "summary": "reports/modeling/calibration/probability_evaluation_summary.csv",
+    "metrics_by_fold": "reports/modeling/calibration/probability_metrics_by_fold.csv",
+    "reliability_bins": "reports/modeling/calibration/reliability_bins.csv",
+    "prediction_set_coverage": "reports/modeling/calibration/prediction_set_coverage_80.csv"
+  }
+}

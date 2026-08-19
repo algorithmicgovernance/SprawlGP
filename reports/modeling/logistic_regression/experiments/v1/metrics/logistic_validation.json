@@ -1,0 +1,21 @@
+{
+  "model": "logistic_regression",
+  "selected_C": 0.1,
+  "selection_metric": "log_loss",
+  "validation_metrics": {
+    "log_loss": 0.3816067220465345,
+    "brier_score": 0.12370224427150339,
+    "pr_auc": 0.34996740983747554,
+    "roc_auc": 0.8352537918349952
+  },
+  "selection_training_origins": [
+    2000,
+    2005
+  ],
+  "selection_validation_origins": [
+    2010
+  ],
+  "calibration_origins_used": [],
+  "test_origins_used": [],
+  "final_test_evaluated": false
+}

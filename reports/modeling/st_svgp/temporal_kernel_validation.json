@@ -1,0 +1,137 @@
+{
+  "status": "PASS",
+  "experiment": "temporal_kernel_validation",
+  "dtype": "float64",
+  "temporal_kernel": {
+    "family": "matern32_markov",
+    "lengthscale_steps": 1.5,
+    "variance": 1.0,
+    "state_dimension": 2,
+    "white_noise_spectral_density": 6.1584028713560075
+  },
+  "time_grid_steps": [
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    4.0
+  ],
+  "checks": {
+    "state_space_matches_direct_kernel": true,
+    "transition_matches_matrix_exponential": true,
+    "stationary_covariance_is_preserved": true,
+    "process_noise_is_positive_semidefinite": true,
+    "gpflow_matches_direct_kernel": true
+  },
+  "errors": {
+    "state_space_vs_direct_max_abs_error": 0.0,
+    "transition_vs_expm_max_abs_error": 2.220446049250313e-16,
+    "stationary_identity_max_abs_error": 1.3877787807814457e-17,
+    "minimum_process_noise_eigenvalue": 0.0,
+    "gpflow_vs_direct_max_abs_error": 1.1102230246251565e-16
+  },
+  "gpflow": {
+    "available": true,
+    "message": null
+  },
+  "delta_checks": [
+    {
+      "delta": 0.0,
+      "transition_expm_max_abs_error": 0.0,
+      "stationary_identity_max_abs_error": 0.0,
+      "process_noise_min_eigenvalue": 0.0
+    },
+    {
+      "delta": 0.25,
+      "transition_expm_max_abs_error": 2.7755575615628914e-17,
+      "stationary_identity_max_abs_error": 1.3877787807814457e-17,
+      "process_noise_min_eigenvalue": 0.007740203462815661
+    },
+    {
+      "delta": 1.0,
+      "transition_expm_max_abs_error": 2.220446049250313e-16,
+      "stationary_identity_max_abs_error": 0.0,
+      "process_noise_min_eigenvalue": 0.2972333787812733
+    },
+    {
+      "delta": 2.5,
+      "transition_expm_max_abs_error": 1.6653345369377348e-16,
+      "stationary_identity_max_abs_error": 0.0,
+      "process_noise_min_eigenvalue": 0.9173655462470048
+    }
+  ],
+  "direct_covariance": [
+    [
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445,
+      0.13973135019231467,
+      0.055427265332953106
+    ],
+    [
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445,
+      0.13973135019231467
+    ],
+    [
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445
+    ],
+    [
+      0.13973135019231467,
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378
+    ],
+    [
+      0.055427265332953106,
+      0.13973135019231467,
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0
+    ]
+  ],
+  "state_space_covariance": [
+    [
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445,
+      0.13973135019231467,
+      0.055427265332953106
+    ],
+    [
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445,
+      0.13973135019231467
+    ],
+    [
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378,
+      0.3286920951863445
+    ],
+    [
+      0.13973135019231467,
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0,
+      0.6790579657402378
+    ],
+    [
+      0.055427265332953106,
+      0.13973135019231467,
+      0.3286920951863445,
+      0.6790579657402378,
+      1.0
+    ]
+  ]
+}
