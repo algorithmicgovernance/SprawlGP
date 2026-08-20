@@ -1,0 +1,12 @@
+{
+  "method_scores_sha256": "63713263a2adfa63036e497d6c9c1553d4388c3668767cdc08fc139410bddc58",
+  "pipeline_stage": "method_selection",
+  "pipeline_version": 1,
+  "report_sha256": "d71cd8ace30e1c7300135ba836e1ab74ef601cda1f217444468fe21f450f493c",
+  "selected_method": "ndbi",
+  "selected_protocol_sha256": "51f3102ea16f00fdfe9506af5431d74b56f7d1c38aa1dcee5671d947162ccb61",
+  "selection_status": "PASS",
+  "source_built_up_version_sha256": "c1111134937904e4a5bfe3bd3c0b022caffea51acc5e2c7b6fb3ec1873f5bf15",
+  "stable_signature": "64969b8e4b8f28dca5c56d82ca9aba8669902a5effbd84e64bb2742bebca58c0",
+  "validation_dataset_sha256": "1c6bc80948f01d92ca0cdbc95494f9ce684eff26ad9481625d558d777ad88089"
+}

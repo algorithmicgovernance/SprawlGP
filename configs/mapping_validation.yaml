@@ -51,7 +51,7 @@ manual_review:
     uncertain: -1
   allowed_confidence: [HIGH, MEDIUM, LOW]
   maximum_reference_offset_years: 2
-  minimum_reviewed_per_anchor_year: 30
+  minimum_reviewed_per_anchor_year: 20 #previously 30
   minimum_pooled_examples_per_class: 20
 
 selection:

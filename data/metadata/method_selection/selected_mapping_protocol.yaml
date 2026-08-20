@@ -1,0 +1,49 @@
+version: 1
+selection_status: PASS
+selected_method:
+  index: ndbi
+  candidate_band: built_ndbi
+  validity_band: valid_ndbi
+candidate_source:
+  output_manifest: data/metadata/built_up_candidates/output_manifest.csv
+  threshold_table: data/metadata/built_up_candidates/threshold_table.csv
+  epochs:
+  - 2000
+  - 2005
+  - 2010
+  - 2015
+  - 2020
+  - 2025
+classification:
+  threshold_method: epoch_specific_otsu
+  morphological_filtering: none
+  temporal_correction: deferred_to_day6
+selection_evidence:
+  mean_yearly_weighted_f1: 0.8859474144768109
+  minimum_yearly_weighted_f1: 0.5400964542736986
+  reversal_rate: 0.0946222623684003
+validation:
+  anchor_years:
+  - 2000
+  - 2005
+  - 2010
+  - 2015
+  - 2020
+  - 2025
+  reviewed_samples: 205
+  uncertain_samples: 65
+  random_seed: 20260728
+excluded_methods:
+  ibi:
+    role: continuous_diagnostic_only
+    reason: unstable_ratio_values
+limitations:
+- Metrics apply only to valid Landsat spatial support.
+- Historical reference-image quality varies by epoch.
+- GHSL is an auxiliary benchmark rather than ground truth.
+- Current OSM is not historical evidence.
+- Temporal correction is deferred to Day 6.
+source_versions:
+  built_up_candidates_sha256: c1111134937904e4a5bfe3bd3c0b022caffea51acc5e2c7b6fb3ec1873f5bf15
+  grid_specification_sha256: 2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525
+recipe_sha256: ee7592b24ce0d120d91a8ca8770855bc558389455a2792297de0d215f276b941

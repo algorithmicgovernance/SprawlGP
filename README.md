@@ -198,6 +198,44 @@ Completed Landsat composites are converted into SAVI, MNDWI, NDBI, IBI, IBUI, Vb
 The resulting binary maps are unvalidated candidate pseudo-labels. Missing or numerically undefined pixels remain masked and are not treated as non-built-up.
 Final index selection, comparative validation and temporal correction are performed in later stages.
 
+### Built-up mapping validation
+
+The operational built-up mapping method was validated using 270 manually
+reviewed samples distributed across the six epochs (2000, 2005, 2010, 2015,
+2020 and 2025). Of these samples, 205 received a certain built/non-built label
+and 65 were retained as uncertain and excluded from the accuracy calculation.
+
+Four candidate methods were evaluated using the predefined design-weighted
+validation protocol:
+
+- NDBI
+- IBUI
+- NDBSUI
+- VbSWIR1-BI
+
+NDBI and IBUI produced identical manual-validation performance:
+
+| Method | Mean yearly weighted F1 | Minimum yearly weighted F1 | Reversal rate |
+|---|---:|---:|---:|
+| NDBI | 0.8859 | 0.5401 | **0.0946** |
+| IBUI | 0.8859 | 0.5401 | 0.1055 |
+| NDBSUI | 0.8606 | 0.4420 | **0.0620** |
+| VbSWIR1-BI | 0.2422 | 0.0417 | 0.4285 |
+
+Because NDBI and IBUI are tied on both the primary metric and the first
+tie-breaker, the predefined temporal-consistency tie-break selects NDBI.
+
+A **temporal reversal** is a cell classified as built at one epoch but
+classified as non-built at the following epoch, considering only locations
+that are valid at both dates. Since established built-up land is expected to
+be largely persistent over five-year periods, a lower reversal rate indicates
+better temporal consistency.
+
+NDBI is therefore retained and frozen as the built-up mapping method for the
+current 30 m dataset. The difference with IBUI is small; the selection should
+be interpreted as a marginal preference based on temporal consistency rather
+than evidence that NDBI is substantially more accurate.
+
 #### Spatial Predictors
 
 Potential predictors include:
