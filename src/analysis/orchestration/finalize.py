@@ -28,7 +28,6 @@ from .common import (
     write_json,
 )
 
-
 TERMINAL_SUCCESS_STATES = {"COMPLETED", "EXISTS"}
 TERMINAL_FAILURE_STATES = {"FAILED", "CANCELLED", "CANCEL_REQUESTED"}
 
@@ -283,10 +282,44 @@ def write_report(
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def write_landsat_only_report(
+    composite_manifest: pd.DataFrame,
+    epoch_quality: pd.DataFrame,
+    output_path: Path,
+) -> None:
+    """Write the annual Landsat-only orchestration report."""
+    lines = [
+        "# Annual Landsat composite exports",
+        "",
+        "| Year | Sensors | Scenes | Covered grid | Median observations | Status |",
+        "|---:|---|---:|---:|---:|:---:|",
+    ]
+    quality_index = epoch_quality.set_index("epoch")
+
+    for row in composite_manifest.sort_values("epoch").itertuples(index=False):
+        quality = quality_index.loc[int(row.epoch)]
+        lines.append(
+            f"| {int(row.epoch)} | {row.sensors} | {int(row.selected_scene_count)} | "
+            f"{float(quality['covered_grid_pct']):.2f}% | "
+            f"{float(quality['median_observation_count']):.2f} | PASS |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "Only median Landsat reflectance composites and valid-observation-count "
+            "assets were validated. No terrain, auxiliary, built-up, transition or "
+            "modelling products were created.",
+        ]
+    )
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def run_finalize(config_path: Path, status_only: bool) -> dict[str, Any]:
     """Refresh task states and finalize metadata after all exports complete."""
     project_root = find_project_root(config_path.parent)
     config = load_yaml(config_path)
+    landsat_only = bool(config.get("orchestration", {}).get("landsat_only", False))
     initialize_earth_engine(config["project"]["earth_engine_project"])
 
     task_path = resolve_project_path(config["exports"]["task_manifest"], project_root)
@@ -392,16 +425,16 @@ def run_finalize(config_path: Path, status_only: bool) -> dict[str, Any]:
         )
         quality_rows.append({"epoch": int(epoch), **statistics})
 
-    terrain_rows = tasks[tasks["product_type"] == "terrain"]
-    if terrain_rows.empty:
-        raise RuntimeError("Terrain task missing from task manifest.")
-    terrain_row = terrain_rows.iloc[0]
-    
-    validate_asset_grid(
-        str(terrain_row["asset_id"]),
-        list(config["srtm"]["output_bands"]),
-        grid,
-    )
+    if not landsat_only:
+        terrain_rows = tasks[tasks["product_type"] == "terrain"]
+        if terrain_rows.empty:
+            raise RuntimeError("Terrain task missing from task manifest.")
+        terrain_row = terrain_rows.iloc[0]
+        validate_asset_grid(
+            str(terrain_row["asset_id"]),
+            list(config["srtm"]["output_bands"]),
+            grid,
+        )
 
     metadata_dir = metadata_directory(config, project_root)
     composite_manifest = pd.DataFrame(composite_rows)
@@ -414,16 +447,6 @@ def run_finalize(config_path: Path, status_only: bool) -> dict[str, Any]:
         metadata_dir / config["metadata"]["landsat_epoch_quality"],
         index=False,
     )
-
-    auxiliary_path = metadata_dir / config["metadata"]["auxiliary_source_manifest"]
-    auxiliary_manifest = pd.read_csv(auxiliary_path)
-
-    osm_metadata_path = resolve_project_path(config["osm"]["source_metadata"], project_root)
-
-    if config["osm"]["required_for_day3"] and not osm_metadata_path.is_file():
-        raise FileNotFoundError(
-            "OSM metadata is missing. Run `make day3-osm` before finalization."
-        )
 
     dependencies_path = metadata_dir / config["metadata"]["dependency_manifest"]
     version_payload = {
@@ -441,38 +464,59 @@ def run_finalize(config_path: Path, status_only: bool) -> dict[str, Any]:
         "task_manifest_sha256": sha256_file(task_path),
         "landsat_composite_manifest_sha256": stable_object_hash(composite_rows),
         "landsat_epoch_quality_sha256": stable_object_hash(quality_rows),
-        "ghsl_epoch_manifest_sha256": sha256_file(
-            metadata_dir / config["metadata"]["ghsl_epoch_manifest"]
-        ),
-        "grid_linkage_sha256": sha256_file(
-            metadata_dir / config["metadata"]["grid_linkage"]
-        ),
-        "osm_source_sha256": (
-            load_json(osm_metadata_path)["source_sha256"]
-            if osm_metadata_path.is_file()
-            else None
-        ),
         "earth_engine_assets": tasks["asset_id"].astype(str).tolist(),
     }
+
+    report_dir = report_directory(config, project_root)
+    if landsat_only:
+        write_landsat_only_report(
+            composite_manifest,
+            epoch_quality,
+            report_dir / config["reports"]["day3_report"],
+        )
+    else:
+        auxiliary_path = metadata_dir / config["metadata"]["auxiliary_source_manifest"]
+        auxiliary_manifest = pd.read_csv(auxiliary_path)
+        osm_metadata_path = resolve_project_path(
+            config["osm"]["source_metadata"], project_root
+        )
+        if config["osm"]["required_for_day3"] and not osm_metadata_path.is_file():
+            raise FileNotFoundError(
+                "OSM metadata is missing. Run `make day3-osm` before finalization."
+            )
+        version_payload.update(
+            {
+                "ghsl_epoch_manifest_sha256": sha256_file(
+                    metadata_dir / config["metadata"]["ghsl_epoch_manifest"]
+                ),
+                "grid_linkage_sha256": sha256_file(
+                    metadata_dir / config["metadata"]["grid_linkage"]
+                ),
+                "osm_source_sha256": (
+                    load_json(osm_metadata_path)["source_sha256"]
+                    if osm_metadata_path.is_file()
+                    else None
+                ),
+            }
+        )
+        create_figures(
+            composite_manifest,
+            epoch_quality,
+            auxiliary_manifest,
+            report_dir,
+            config,
+        )
+        write_report(
+            composite_manifest,
+            epoch_quality,
+            auxiliary_manifest,
+            report_dir / config["reports"]["day3_report"],
+        )
+
     version_payload["stable_signature"] = stable_object_hash(version_payload)
     write_json(
         metadata_dir / config["metadata"]["day3_version"],
         version_payload,
-    )
-
-    report_dir = report_directory(config, project_root)
-    create_figures(
-        composite_manifest,
-        epoch_quality,
-        auxiliary_manifest,
-        report_dir,
-        config,
-    )
-    write_report(
-        composite_manifest,
-        epoch_quality,
-        auxiliary_manifest,
-        report_dir / config["reports"]["day3_report"],
     )
 
     print(json.dumps(version_payload, indent=2))

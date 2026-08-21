@@ -57,6 +57,46 @@ test-landsat: ## Run the pytest suite for the Landsat catalog module with verbos
 day2: landsat-catalog landsat-visuals test-landsat ## Execute the complete Day 2 pipeline: build the Landsat catalog, generate visualizations, and run tests
 
 # =============================================================================
+#  Annual Landsat observations (2000-2025)
+# =============================================================================
+
+.PHONY: \
+	annual-catalog \
+	annual-orchestration-preflight \
+	annual-orchestration-submit \
+	annual-orchestration-status \
+	annual-orchestration-finalize \
+	test-annual
+
+annual-catalog: ## Build the isolated 2000-2025 calendar-year Landsat catalogue
+	python -m src.analysis.landsat.build_annual_catalog \
+		--config configs/annual/landsat_catalog_annual.yaml
+
+annual-orchestration-preflight: ## Validate annual grid and catalogue dependencies without submitting exports
+	python -m src.analysis.orchestration.preflight \
+		--config configs/annual/orchestrate_sources_annual.yaml
+
+annual-orchestration-submit: ## Submit annual median composites and valid-count assets only
+	python -m src.analysis.landsat.build_composites \
+		--config configs/annual/orchestrate_sources_annual.yaml \
+		--submit
+
+annual-orchestration-status: ## Check annual Landsat Earth Engine task status
+	python -m src.analysis.orchestration.finalize \
+		--config configs/annual/orchestrate_sources_annual.yaml \
+		--status-only
+
+annual-orchestration-finalize: ## Validate completed annual Landsat assets and write metadata
+	python -m src.analysis.orchestration.finalize \
+		--config configs/annual/orchestrate_sources_annual.yaml
+
+test-annual: ## Run annual catalogue and asset-isolation tests
+	pytest \
+		tests/test_annual_catalog.py \
+		tests/test_annual_asset_isolation.py \
+		-v
+
+# =============================================================================
 #  — Orchestration (Landsat composites, terrain, OSM)
 # =============================================================================
 

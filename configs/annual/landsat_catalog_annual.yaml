@@ -1,0 +1,107 @@
+catalog:
+  version: 1
+  earth_engine_project: urban-sprawl-ssa
+  years:
+    - 2000
+    - 2001
+    - 2002
+    - 2003
+    - 2004
+    - 2005
+    - 2006
+    - 2007
+    - 2008
+    - 2009
+    - 2010
+    - 2011
+    - 2012
+    - 2013
+    - 2014
+    - 2015
+    - 2016
+    - 2017
+    - 2018
+    - 2019
+    - 2020
+    - 2021
+    - 2022
+    - 2023
+    - 2024
+    - 2025
+  temporal_mode: calendar_year
+  window_end_exclusive: true
+  allow_future_imagery: false
+  automatic_temporal_fallback: false
+
+study_area:
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  context_boundary: data/processed/boundaries/yaounde_context_buffer.gpkg
+  boundary_report: data/metadata/boundary_report.json
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+
+collections:
+  LT05:
+    id: LANDSAT/LT05/C02/T1_L2
+    spacecraft: LANDSAT_5
+    required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+
+  LE07:
+    id: LANDSAT/LE07/C02/T1_L2
+    spacecraft: LANDSAT_7
+    required_bands: [SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7]
+
+  LC08:
+    id: LANDSAT/LC08/C02/T1_L2
+    spacecraft: LANDSAT_8
+    required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+
+  LC09:
+    id: LANDSAT/LC09/C02/T1_L2
+    spacecraft: LANDSAT_9
+    required_bands: [SR_B2, SR_B3, SR_B4, SR_B5, SR_B6, SR_B7]
+
+sensor_eras:
+  - start_year: 2000
+    end_year: 2012
+    primary: [LT05]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  - start_year: 2013
+    end_year: 2020
+    primary: [LC08]
+    supplemental: [LE07]
+    diagnostic_only: []
+
+  - start_year: 2021
+    end_year: 2025
+    primary: [LC08, LC09]
+    supplemental: []
+    diagnostic_only: [LE07]
+
+quality_mask:
+  mask_fill: true
+  mask_dilated_cloud: true
+  mask_cirrus_landsat8: true
+  mask_cloud: true
+  mask_cloud_shadow: true
+  mask_snow: true
+  mask_radiometric_saturation: true
+  mask_water: false
+
+statistics:
+  max_pixels: 10000000
+  tile_scale: 4
+
+selection:
+  minimum_coverage_one_observation_pct: 95.0
+  preferred_coverage_three_observations_pct: 80.0
+  coverage_comparison_tolerance_pct: 0.5
+  prefer_primary_when_threshold_passed: true
+
+outputs:
+  directory: data/metadata/annual/landsat
+  checkpoint_directory: data/metadata/annual/landsat/_checkpoints
+  report_directory: reports/annual/landsat
+  report_name: annual_catalog_report.md

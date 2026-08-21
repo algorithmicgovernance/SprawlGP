@@ -20,7 +20,6 @@ from .common import (
     stable_object_hash,
 )
 
-
 EXPECTED_EPOCHS = {1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025}
 
 # What we actually have due to the lack of early data for Yaounde
@@ -75,8 +74,11 @@ def compare_catalog_reference(
 def validate_manifest(
     manifest: pd.DataFrame,
     protocol: dict[str, Any],
+    expected_epochs: set[int] | None = None,
+    supported_sensors: set[str] | None = None,
 ) -> str:
     """Validate epochs, exact asset IDs and protocol representation."""
+    expected = expected_epochs or EXPECTED_EPOCHS
     required = {"epoch", "sensor_key", "acquisition_date"}
     missing = required.difference(manifest.columns)
 
@@ -93,12 +95,30 @@ def validate_manifest(
     observed_epochs = set(manifest["epoch"].astype(int))
 
     # Accept a subset
-    if not observed_epochs.issubset(EXPECTED_EPOCHS):
-        invalid = observed_epochs - EXPECTED_EPOCHS
+    if not observed_epochs.issubset(expected):
+        invalid = observed_epochs - expected
         raise ValueError(
-            f"Found epochs that are not in the expected list {sorted(EXPECTED_EPOCHS)}: "
+            f"Found epochs that are not in the expected list {sorted(expected)}: "
             f"{sorted(invalid)}"
         )
+
+    if supported_sensors is not None:
+        observed_sensors = set(manifest["sensor_key"].astype(str))
+        unknown_sensors = observed_sensors.difference(supported_sensors)
+        if unknown_sensors:
+            raise ValueError(
+                f"Selected manifest uses unsupported sensors: {sorted(unknown_sensors)}"
+            )
+
+    if protocol.get("temporal_mode") == "calendar_year":
+        acquisition_years = pd.to_datetime(
+            manifest["acquisition_date"], errors="raise"
+        ).dt.year
+        represented_years = manifest["epoch"].astype(int)
+        if (acquisition_years.to_numpy() != represented_years.to_numpy()).any():
+            raise ValueError(
+                "Calendar-year manifests cannot use imagery outside the represented year."
+            )
 
     if "candidate_for_composite" in manifest.columns:
         values = manifest["candidate_for_composite"].astype(str).str.lower()
@@ -115,8 +135,8 @@ def validate_manifest(
     # print("Protocol epochs: ", protocol_epochs)
     # print("Expected epochs: ", EXPECTED_EPOCHS)
     
-    if not protocol_epochs.issubset(EXPECTED_EPOCHS):
-        invalid = protocol_epochs - EXPECTED_EPOCHS
+    if not protocol_epochs.issubset(expected):
+        invalid = protocol_epochs - expected
         raise ValueError(
             f"The compositing protocol contains invalid epochs: {sorted(invalid)}"
         )
@@ -144,15 +164,17 @@ def run_preflight(config_path: Path) -> dict[str, Any]:
         for key, value in inputs.items()
     }
 
-    required_paths = (
+    required_paths = [
         "grid_specification",
         "grid_reference",
         "selected_scene_manifest",
         "compositing_protocol",
         "catalog_version",
-        "catalog_reference",
         "landsat_catalog_config",
-    )
+    ]
+
+    if "catalog_reference" in paths:
+        required_paths.append("catalog_reference")
 
     for key in required_paths:
         if not paths[key].is_file():
@@ -166,12 +188,19 @@ def run_preflight(config_path: Path) -> dict[str, Any]:
         raise ValueError(f"Unexpected project CRS: {grid['crs']}")
 
     catalog_version = load_json(paths["catalog_version"])
-    catalog_reference = load_json(paths["catalog_reference"])
-    compare_catalog_reference(catalog_version, catalog_reference)
+    if "catalog_reference" in paths:
+        catalog_reference = load_json(paths["catalog_reference"])
+        compare_catalog_reference(catalog_version, catalog_reference)
 
     manifest = pd.read_csv(paths["selected_scene_manifest"])
     protocol = load_yaml(paths["compositing_protocol"])
-    id_column = validate_manifest(manifest, protocol)
+    catalog_config = load_yaml(paths["landsat_catalog_config"])
+    id_column = validate_manifest(
+        manifest,
+        protocol,
+        expected_epochs=set(int(value) for value in config["landsat"]["epochs"]),
+        supported_sensors=set(catalog_config["collections"]),
+    )
 
     rows = [
         dependency_row("grid_specification", paths["grid_specification"]),
@@ -179,9 +208,10 @@ def run_preflight(config_path: Path) -> dict[str, Any]:
         dependency_row("selected_scene_manifest", paths["selected_scene_manifest"]),
         dependency_row("compositing_protocol", paths["compositing_protocol"]),
         dependency_row("catalog_version", paths["catalog_version"]),
-        dependency_row("catalog_reference", paths["catalog_reference"]),
         dependency_row("landsat_catalog_config", paths["landsat_catalog_config"]),
     ]
+    if "catalog_reference" in paths:
+        rows.append(dependency_row("catalog_reference", paths["catalog_reference"]))
 
     output_dir = metadata_directory(config, project_root)
     output_path = output_dir / config["metadata"]["dependency_manifest"]
