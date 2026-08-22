@@ -107,3 +107,6 @@ reports/exploration_v*/
 artifacts/
 data/archive/
 scripts/SprawlGP_local_helpers/
+data/final/yaounde_urban_expansion_30m_annual_v1/
+reports/modeling/**/predictions/*.parquet
+data/validation/validation_dataset.parquet

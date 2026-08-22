@@ -1,0 +1,138 @@
+version: 1
+
+release:
+  dataset_id: yaounde_urban_expansion_30m_annual_v1
+  release_status: PROVISIONAL_PENDING_ANNUAL_MANUAL_VALIDATION
+  mapping_validation_status: PROVISIONAL_ANNUAL_PROTOCOL
+  manual_validation_complete: false
+
+project:
+  earth_engine_project: urban-sprawl-ssa
+
+inputs:
+  grid_specification: data/metadata/grid_specification.json
+  grid_reference: tests/reference/grid_v1.json
+  annual_orchestration_version: data/metadata/annual/orchestration/annual_orchestration_version.json
+  landsat_composite_manifest: data/metadata/annual/orchestration/landsat_composite_manifest.csv
+  annual_quality_summary: data/metadata/annual/landsat/annual_quality_summary.csv
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  terrain_asset: projects/urban-sprawl-ssa/assets/sprawlgp/v1/terrain/elevation_slope
+
+mapping:
+  selected_index: ndbi
+  mapping_method: ndbi
+  mapping_validation_status: PROVISIONAL_ANNUAL_PROTOCOL
+  years:
+    - 2000
+    - 2001
+    - 2002
+    - 2003
+    - 2004
+    - 2005
+    - 2006
+    - 2007
+    - 2008
+    - 2009
+    - 2010
+    - 2011
+    - 2012
+    - 2013
+    - 2014
+    - 2015
+    - 2016
+    - 2017
+    - 2018
+    - 2019
+    - 2020
+    - 2021
+    - 2022
+    - 2023
+    - 2024
+    - 2025
+  transition_horizon_years: 1
+  built_up_direction: greater_than
+  persistence_rule: absorbing_after_first_valid_built_observation
+
+indices:
+  formula_version: 1
+  denominator_epsilon: 0.000001
+  savi_l: 0.5
+  retained: [ndbi, ibui, ndbsui, savi, mndwi]
+  diagnostic_otsu: [ndbi, ibui, ndbsui]
+
+classification:
+  threshold_strategy: year_specific_otsu
+  threshold_region: core
+  application_region: frozen_context_grid
+  minimum_valid_observations_for_threshold: 1
+  minimum_valid_observations_for_state: 1
+
+histogram:
+  max_buckets: 256
+  min_bucket_width: null
+  max_raw: 100000
+  max_pixels: 10000000
+  tile_scale: 4
+
+quality:
+  high_confidence_min_observations: 3
+  pairwise_support_warning_pct: 80.0
+
+predictors:
+  spectral_bands: [blue, green, red, nir, swir1, swir2]
+  spectral_indices: [ndbi, ibui, ndbsui, savi, mndwi]
+  neighbourhood_sizes_pixels: [3, 5, 11]
+  recent_growth_window_pixels: 11
+
+population:
+  collection: JRC/GHSL/P2023A/GHS_POP
+  band: population_count
+  epochs: [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
+  lookup_policy: latest_available_epoch_at_or_before_origin
+  source_unit: persons_per_native_cell
+  output_unit: persons_per_square_kilometre
+  resampling: nearest
+
+exports:
+  asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/annual_v1
+  state_folder: annual_dataset/states
+  overwrite_existing_assets: false
+  max_pixels: 10000000
+  shard_size: 256
+  priority: 100
+  drive_folder: SprawlGP_annual_v1_cell_time
+  table_file_prefix: annual_cell_time
+
+metadata:
+  directory: data/metadata/annual/annual_dataset
+  dependency_manifest: dependency_manifest.csv
+  threshold_table: annual_thresholds.csv
+  histogram_archive: annual_histograms.json
+  state_task_manifest: earth_engine_state_tasks.csv
+  state_output_manifest: state_output_manifest.csv
+  table_task_manifest: earth_engine_table_tasks.csv
+  state_summary: annual_state_summary.csv
+  transition_summary: annual_transition_summary.csv
+  products_version: annual_products_version.json
+
+outputs:
+  staging_table_directory: data/staging/annual_cell_time_exports
+  final_directory: data/final/yaounde_urban_expansion_30m_annual_v1
+  cell_time_dataset: cell_time_dataset.parquet
+  data_dictionary: data_dictionary.yaml
+  dataset_card: dataset_card.md
+  annual_state_summary: annual_state_summary.csv
+  annual_transition_summary: annual_transition_summary.csv
+
+audit:
+  old_threshold_table: data/metadata/built_up_candidates/threshold_table.csv
+  old_historical_demand: data/final/yaounde_urban_expansion_30m_v2/historical_demand.csv
+  old_compositing_protocol: data/metadata/landsat/compositing_protocol.yaml
+  report_directory: reports/annual/audit
+  annual_state_summary: annual_state_summary.csv
+  annual_transition_summary: annual_transition_summary.csv
+  anchor_protocol_comparison: anchor_protocol_comparison.csv
+  five_year_block_comparison: five_year_block_comparison.csv
+  anomaly_report: anomaly_2015_2020.md
+  built_fraction_figure: annual_built_fraction.png
+  new_built_area_figure: annual_new_built_area.png

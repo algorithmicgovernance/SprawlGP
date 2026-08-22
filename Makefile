@@ -66,6 +66,15 @@ day2: landsat-catalog landsat-visuals test-landsat ## Execute the complete Day 2
 	annual-orchestration-submit \
 	annual-orchestration-status \
 	annual-orchestration-finalize \
+	annual-dataset-preflight \
+	annual-products-submit \
+	annual-products-status \
+	annual-products-finalize \
+	annual-audit \
+	annual-build-tables \
+	annual-tables-status \
+	annual-tables-assemble \
+	test-annual-dataset \
 	test-annual
 
 annual-catalog: ## Build the isolated 2000-2025 calendar-year Landsat catalogue
@@ -90,10 +99,56 @@ annual-orchestration-finalize: ## Validate completed annual Landsat assets and w
 	python -m src.analysis.orchestration.finalize \
 		--config configs/annual/orchestrate_sources_annual.yaml
 
-test-annual: ## Run annual catalogue and asset-isolation tests
+annual-dataset-preflight: ## Validate annual Day 3 inputs and isolation without submitting tasks
+	python -m src.analysis.annual_dataset.build_products \
+		--config configs/annual/annual_dataset.yaml \
+		--preflight-only
+
+annual-products-submit: ## Submit 26 compact annual index and state products
+	python -m src.analysis.annual_dataset.build_products \
+		--config configs/annual/annual_dataset.yaml \
+		--submit
+
+annual-products-status: ## Check annual state-product Earth Engine task status
+	python -m src.analysis.annual_dataset.finalize \
+		--config configs/annual/annual_dataset.yaml \
+		--status-only
+
+annual-products-finalize: ## Validate annual state assets and write state summaries
+	python -m src.analysis.annual_dataset.finalize \
+		--config configs/annual/annual_dataset.yaml
+
+annual-audit: ## Build annual transition diagnostics and anomaly evidence outputs
+	python -m src.analysis.annual_dataset.audit \
+		--config configs/annual/annual_dataset.yaml
+
+annual-build-tables: ## Submit 25 annual eligible-cell table exports
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--submit
+
+annual-tables-status: ## Check annual table-export Earth Engine task status
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--status-only
+
+annual-tables-assemble: ## Assemble downloaded annual table exports into Parquet
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--assemble
+
+test-annual-dataset: ## Run isolated annual Day 3 tests
+	python -m pytest \
+		tests/test_annual_catalog.py \
+		tests/test_annual_asset_isolation.py \
+		tests/test_annual_dataset.py \
+		-v
+
+test-annual: ## Run all annual catalogue, isolation and Day 3 dataset tests
 	pytest \
 		tests/test_annual_catalog.py \
 		tests/test_annual_asset_isolation.py \
+		tests/test_annual_dataset.py \
 		-v
 
 # =============================================================================
