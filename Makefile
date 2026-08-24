@@ -467,6 +467,8 @@ modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression exp
 	modeling-svgp-preflight \
 	modeling-svgp \
 	modeling-probability-evaluation \
+	modeling-probability-evaluation-annual \
+	modeling-probability-evaluation-annual-mondrian \
 	modeling-svgp-feature \
 	modeling-svgp-feature-summary \
 	modeling-svgp-tune \
@@ -488,6 +490,12 @@ modeling-svgp:
 
 modeling-probability-evaluation:
 	python -m src.models.evaluation.evaluate_probabilities
+
+modeling-probability-evaluation-annual:
+	python -m src.models.evaluation.evaluate_probabilities --annual
+
+modeling-probability-evaluation-annual-mondrian:
+	python -m src.models.evaluation.evaluate_probabilities --annual-mondrian
 
 # Usage:
 # make modeling-svgp-feature FEATURE_SET=log_distance
@@ -524,6 +532,9 @@ modeling-svgp-natgrad-v1:
 # initialised at 1.5 five-year steps.
 PYTHON ?= python
 ST_SVGP_CONFIG := configs/modeling/st_svgp.yaml
+ST_SVGP_ANNUAL_CONFIG := configs/modeling/st_svgp_annual.yaml
+ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG := configs/modeling/st_svgp_annual/convergence_1500.yaml
+ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG := configs/modeling/st_svgp_annual/convergence_3000.yaml
 ST_SVGP_FIXED_1P5_CONFIG := configs/modeling/st_svgp/temporal_lengthscale_fixed_1p5.yaml
 ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
 
@@ -532,7 +543,14 @@ ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
 	st-svgp-validate-filter-smoother st-svgp-validate-cvi \
 	st-svgp-pretraining-validation st-svgp-preflight st-svgp-rolling \
 	st-svgp-final-fit st-svgp-fixed-1p5-rolling st-svgp-compare-oof \
-	st-svgp-candidate-check
+	st-svgp-candidate-check st-svgp-annual-preflight \
+	st-svgp-annual-rolling st-svgp-annual-final-fit \
+	st-svgp-annual-convergence-1500-preflight \
+	st-svgp-annual-convergence-1500 \
+	st-svgp-annual-convergence-3000-preflight \
+	st-svgp-annual-convergence-3000 \
+	st-svgp-annual-convergence-3000-evaluate \
+	st-svgp-annual-3000-calibration
 
 # [01/37] Matérn-3/2 state-space covariance equals direct kernel: ell=0.5, variance=0.3.
 # [02/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.0, variance=1.0.
@@ -621,17 +639,72 @@ st-svgp-preflight:
 		--config $(ST_SVGP_CONFIG) \
 		--preflight-only
 
+# Validate the provisional annual config and dataset contract without fitting.
+st-svgp-annual-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG) \
+		--preflight-only
+
+# Validate the isolated 1500-iteration convergence config without fitting.
+st-svgp-annual-convergence-1500-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG) \
+		--preflight-only
+
+# Validate exact 3000-budget parity and the annual data contract without fitting.
+st-svgp-annual-convergence-3000-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence_3000 \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--preflight-only
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--preflight-only
+
 # Reproduce the promoted free-init-1.5 candidate on the three pre-2020 rolling folds.
 st-svgp-rolling:
 	$(PYTHON) -m src.models.train_st_svgp \
 		--config $(ST_SVGP_CONFIG) \
 		--rolling-only
 
+# Run only the three strict pre-2020 annual development folds.
+st-svgp-annual-rolling:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG) \
+		--rolling-only
+
+# Run only the same three pre-2020 folds, then compare isolated artifacts.
+st-svgp-annual-convergence-1500:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG) \
+		--rolling-only
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG)
+
+# Run only the final planned iteration-budget extension from a fresh initialization.
+st-svgp-annual-convergence-3000:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--rolling-only
+
+# Evaluate the completed 3000 OOF run without modifying retained budget artifacts.
+st-svgp-annual-convergence-3000-evaluate:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence_3000 \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG)
+
+# Calibrate the existing 3000-iteration OOF probabilities without model training.
+st-svgp-annual-3000-calibration:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_temporal_calibration
+
 # Fit the promoted candidate on all pre-test origins (2000-2015).
 # The canonical config still keeps 2020 locked and does not evaluate it.
 st-svgp-final-fit:
 	$(PYTHON) -m src.models.train_st_svgp \
 		--config $(ST_SVGP_CONFIG)
+
+# Fit annual origins 2000-2018 without evaluating the locked 2020-2025 block.
+st-svgp-annual-final-fit:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG)
 
 # Reproduce the retained diagnostic in which ell_t is fixed exactly at 1.5.
 st-svgp-fixed-1p5-rolling:

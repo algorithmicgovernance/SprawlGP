@@ -12,9 +12,65 @@ clarified with the supervisor before implementation.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 from sklearn.linear_model import LogisticRegression
+
+PROBABILITY_EPSILON = 1.0e-6
+
+
+@dataclass(frozen=True)
+class FittedBinaryCalibrator:
+    """Fitted Platt or Beta mapping for binary probabilities."""
+
+    method: str
+    coefficient_a: float
+    coefficient_b: float
+    coefficient_c: float | None = None
+
+    def predict(self, probability: np.ndarray) -> np.ndarray:
+        """Apply the fitted mapping to raw probabilities."""
+        _, p = _as_binary_arrays(np.zeros(len(probability)), probability)
+        clipped = np.clip(p, PROBABILITY_EPSILON, 1.0 - PROBABILITY_EPSILON)
+        if self.method == "platt":
+            linear_predictor = self.coefficient_a + self.coefficient_b * np.log(
+                clipped / (1.0 - clipped)
+            )
+        elif self.method == "beta":
+            if self.coefficient_c is None:
+                raise ValueError("Beta calibration requires coefficient_c.")
+            linear_predictor = (
+                self.coefficient_a * np.log(clipped)
+                + self.coefficient_b * np.log1p(-clipped)
+                + self.coefficient_c
+            )
+        else:
+            raise ValueError(f"Unknown calibration method: {self.method}")
+        return expit(linear_predictor)
+
+    def monotonic_direction(self) -> str:
+        """Return the mapping direction over the numerically clipped domain."""
+        if self.method == "platt":
+            if self.coefficient_b > 0.0:
+                return "increasing"
+            if self.coefficient_b < 0.0:
+                return "decreasing"
+            return "constant"
+        if self.method != "beta":
+            raise ValueError(f"Unknown calibration method: {self.method}")
+
+        endpoints = np.array([PROBABILITY_EPSILON, 1.0 - PROBABILITY_EPSILON])
+        derivative_numerator = self.coefficient_a - (
+            self.coefficient_a + self.coefficient_b
+        ) * endpoints
+        if np.all(derivative_numerator >= 0.0):
+            return "increasing"
+        if np.all(derivative_numerator <= 0.0):
+            return "decreasing"
+        return "non_monotonic"
 
 
 def _as_binary_arrays(
@@ -35,6 +91,61 @@ def _as_binary_arrays(
         raise ValueError("Probabilities must lie in [0, 1].")
 
     return y, p
+
+
+def _fit_logistic_calibrator(
+    y_true: np.ndarray,
+    probability: np.ndarray,
+    method: str,
+) -> FittedBinaryCalibrator:
+    """Fit one unweighted, unregularized logistic calibration mapping."""
+    y, p = _as_binary_arrays(y_true, probability)
+    if set(np.unique(y)) != {0, 1}:
+        raise ValueError("Calibration fitting requires both target classes.")
+
+    clipped = np.clip(p, PROBABILITY_EPSILON, 1.0 - PROBABILITY_EPSILON)
+    if method == "platt":
+        predictors = np.log(clipped / (1.0 - clipped)).reshape(-1, 1)
+    elif method == "beta":
+        predictors = np.column_stack((np.log(clipped), np.log1p(-clipped)))
+    else:
+        raise ValueError("method must be 'platt' or 'beta'.")
+
+    model = LogisticRegression(
+        C=np.inf,
+        solver="lbfgs",
+        max_iter=500,
+    )
+    model.fit(predictors, y)
+
+    if method == "platt":
+        return FittedBinaryCalibrator(
+            method=method,
+            coefficient_a=float(model.intercept_[0]),
+            coefficient_b=float(model.coef_[0, 0]),
+        )
+    return FittedBinaryCalibrator(
+        method=method,
+        coefficient_a=float(model.coef_[0, 0]),
+        coefficient_b=float(model.coef_[0, 1]),
+        coefficient_c=float(model.intercept_[0]),
+    )
+
+
+def fit_platt_calibrator(
+    y_true: np.ndarray,
+    probability: np.ndarray,
+) -> FittedBinaryCalibrator:
+    """Fit logit(q) = a + b * logit(p)."""
+    return _fit_logistic_calibrator(y_true, probability, method="platt")
+
+
+def fit_beta_calibrator(
+    y_true: np.ndarray,
+    probability: np.ndarray,
+) -> FittedBinaryCalibrator:
+    """Fit logit(q) = a * log(p) + b * log(1-p) + c."""
+    return _fit_logistic_calibrator(y_true, probability, method="beta")
 
 
 def reliability_table(
@@ -120,13 +231,11 @@ def calibration_intercept_slope(
     Ideal values are intercept=0 and slope=1.
     """
     y, p = _as_binary_arrays(y_true, probability)
-    eps = 1.0e-6
-    clipped = np.clip(p, eps, 1.0 - eps)
+    clipped = np.clip(p, PROBABILITY_EPSILON, 1.0 - PROBABILITY_EPSILON)
     logits = np.log(clipped / (1.0 - clipped)).reshape(-1, 1)
 
     model = LogisticRegression(
         C=np.inf,
-        penalty=None,
         solver="lbfgs",
         max_iter=500,
     )

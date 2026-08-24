@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-08-24T15:57:25.735173+00:00",
+  "target_coverage": 0.8,
+  "binning": {
+    "n_bins": 10,
+    "strategy": "quantile"
+  },
+  "models": [
+    {
+      "name": "st_svgp_annual_convergence_1500",
+      "oof_path": "reports/modeling/st_svgp_annual/experiments/convergence_1500/predictions/st_svgp_oof_predictions.parquet"
+    }
+  ],
+  "outputs": {
+    "summary": "reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/probability_evaluation_summary.csv",
+    "metrics_by_fold": "reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/probability_metrics_by_fold.csv",
+    "reliability_bins": "reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/reliability_bins.csv",
+    "prediction_set_coverage": "reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/prediction_set_coverage_80.csv"
+  }
+}

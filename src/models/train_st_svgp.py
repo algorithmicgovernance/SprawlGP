@@ -43,15 +43,20 @@ from sklearn.metrics import (
     log_loss,
     roc_auc_score,
 )
-
 from src.feature_engineering.urban_expansion import (
     add_candidate_features,
+)
+from src.models.evaluation.calibration import (
+    calibration_metrics,
 )
 from src.models.st_svgp.block_inference import (
     DenseCviSites,
     damped_dense_natural_gradient_update,
     initialise_dense_sites,
     site_precision,
+)
+from src.models.st_svgp.cvi import (
+    probit_predictive_probability,
 )
 from src.models.st_svgp.model import (
     STPosterior,
@@ -95,17 +100,121 @@ def load_config(path: Path) -> dict[str, Any]:
             "Expected model: st_svgp."
         )
 
+    locked_block = config.get(
+        "locked_block",
+        config.get("final_test"),
+    )
+    if not isinstance(locked_block, dict):
+        raise ValueError(
+            "A locked_block or final_test mapping is required."
+        )
+
     if bool(
-        config["final_test"].get(
+        locked_block.get(
             "evaluate",
             False,
         )
     ):
         raise ValueError(
-            "The 2020 final test must remain locked."
+            "The locked temporal block must not be evaluated."
         )
 
+    validate_development_splits(config)
+
     return config
+
+
+def validate_development_splits(
+    config: dict[str, Any],
+) -> None:
+    """Reject configured development labels beyond an optional cutoff."""
+    development = config.get("development")
+    if development is None:
+        return
+    if not isinstance(development, dict):
+        raise ValueError(
+            "development must be a mapping."
+        )
+
+    maximum_target_year = int(
+        development["maximum_target_year"]
+    )
+    horizon_years = int(
+        config["time"]["step_years"]
+    )
+
+    configured_origins: list[tuple[str, int]] = []
+    for fold_number, fold in enumerate(
+        config["rolling_validation"]["folds"],
+        start=1,
+    ):
+        configured_origins.extend(
+            (
+                f"fold {fold_number} training",
+                int(origin),
+            )
+            for origin in fold["train_origins"]
+        )
+        configured_origins.append(
+            (
+                f"fold {fold_number} validation",
+                int(fold["validation_origin"]),
+            )
+        )
+
+    configured_origins.extend(
+        ("final fit", int(origin))
+        for origin in config["final_fit"]["origins"]
+    )
+
+    violations = [
+        (
+            label,
+            origin,
+            origin + horizon_years,
+        )
+        for label, origin in configured_origins
+        if origin + horizon_years
+        > maximum_target_year
+    ]
+    if violations:
+        details = ", ".join(
+            f"{label} {origin}->{target_year}"
+            for label, origin, target_year in violations
+        )
+        raise ValueError(
+            "Development target years must be at most "
+            f"{maximum_target_year}: {details}."
+        )
+
+    locked_block = config.get("locked_block")
+    if locked_block is not None:
+        locked_origins = [
+            int(value)
+            for value in locked_block["origins"]
+        ]
+        locked_target_years = [
+            int(value)
+            for value in locked_block[
+                "target_years"
+            ]
+        ]
+        expected_target_years = [
+            origin + horizon_years
+            for origin in locked_origins
+        ]
+        if locked_target_years != expected_target_years:
+            raise ValueError(
+                "Locked target years must match locked origins "
+                "plus time.step_years."
+            )
+        if any(
+            target_year <= maximum_target_year
+            for target_year in locked_target_years
+        ):
+            raise ValueError(
+                "Locked target years must follow the development period."
+            )
 
 
 def configure_runtime(
@@ -140,12 +249,24 @@ def validate_dataset(
 ) -> pd.DataFrame:
     """Create promoted features and validate the temporal contract."""
     dataset = config["dataset"]
+    feature_engineering = config.get(
+        "feature_engineering",
+        {},
+    )
 
     target = str(dataset["target"])
     origin = str(dataset["forecast_origin"])
     target_year = str(dataset["target_year"])
 
-    frame = add_candidate_features(frame)
+    frame = add_candidate_features(
+        frame,
+        recent_growth_column=str(
+            feature_engineering.get(
+                "recent_growth_column",
+                "recent_local_growth_5y_t",
+            )
+        ),
+    )
 
     required = {
         target,
@@ -180,11 +301,20 @@ def validate_dataset(
         errors="raise",
     ).astype(int)
 
+    horizon_years = int(
+        config["time"]["step_years"]
+    )
+    if horizon_years < 1:
+        raise ValueError(
+            "time.step_years must be positive."
+        )
+
     if not target_years.eq(
-        origins + 5
+        origins + horizon_years
     ).all():
         raise ValueError(
-            "target_year must equal forecast_origin + 5."
+            "target_year must equal forecast_origin + "
+            f"{horizon_years}."
         )
 
     y = pd.to_numeric(
@@ -784,6 +914,7 @@ def train_model(
             zip(
                 gradients,
                 model.trainable_variables,
+                strict=True,
             )
         )
 
@@ -874,7 +1005,7 @@ def predict_frame(
     last_training_step: float,
     config: dict[str, Any],
     dtype: tf.dtypes.DType,
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """Forecast one future origin without conditioning on its targets."""
     delta = (
         validation_data.time_step
@@ -899,6 +1030,7 @@ def predict_frame(
     )
 
     probabilities = []
+    latent_variances = []
 
     for start in range(
         0,
@@ -910,18 +1042,14 @@ def predict_frame(
             len(validation_data.targets),
         )
 
-        probability = (
-            model.predict_probability(
+        latent_mean, latent_variance = (
+            model.latent_marginals(
                 features=tf.constant(
-                    validation_data.features[
-                        start:end
-                    ],
+                    validation_data.features[start:end],
                     dtype=dtype,
                 ),
                 coordinates_km=tf.constant(
-                    validation_data.coordinates_km[
-                        start:end
-                    ],
+                    validation_data.coordinates_km[start:end],
                     dtype=dtype,
                 ),
                 inducing_mean=inducing_mean,
@@ -933,9 +1061,17 @@ def predict_frame(
                 ),
             )
         )
+        probability = probit_predictive_probability(
+            marginal_mean=latent_mean,
+            marginal_variance=latent_variance,
+            dtype=dtype,
+        )
 
         probabilities.append(
             probability.numpy()
+        )
+        latent_variances.append(
+            latent_variance.numpy()
         )
 
     result = np.concatenate(
@@ -951,7 +1087,18 @@ def predict_frame(
             "Invalid ST-SVGP probabilities."
         )
 
-    return result
+    variance_result = np.concatenate(
+        latent_variances
+    )
+    if (
+        not np.isfinite(variance_result).all()
+        or (variance_result < 0.0).any()
+    ):
+        raise RuntimeError(
+            "Invalid ST-SVGP latent variances."
+        )
+
+    return result, variance_result
 
 
 def probabilistic_metrics(
@@ -1068,7 +1215,7 @@ def run_fold(
         seed_offset=fold_number,
     )
 
-    probability = predict_frame(
+    probability, latent_variance = predict_frame(
         model=model,
         posterior=posterior,
         validation_data=validation_data,
@@ -1101,6 +1248,18 @@ def run_fold(
         "probability_raw"
     ] = probability
     predictions["fold"] = fold_number
+
+    reporting = config.get("reporting", {})
+    annual_diagnostics = bool(
+        reporting.get(
+            "annual_temporal_diagnostics",
+            False,
+        )
+    )
+    if annual_diagnostics:
+        predictions["latent_variance"] = (
+            latent_variance
+        )
 
     record: dict[str, object] = {
         "fold": fold_number,
@@ -1156,6 +1315,76 @@ def run_fold(
             ).numpy()
         ),
     }
+
+    if annual_diagnostics:
+        validation_target_years = (
+            validation_frame[
+                str(dataset["target_year"])
+            ]
+            .astype(int)
+            .unique()
+        )
+        if len(validation_target_years) != 1:
+            raise ValueError(
+                "A validation origin must map to one target year."
+            )
+
+        calibration = calibration_metrics(
+            y,
+            probability,
+            n_bins=int(
+                reporting.get(
+                    "calibration_bins",
+                    10,
+                )
+            ),
+            strategy=str(
+                reporting.get(
+                    "calibration_strategy",
+                    "quantile",
+                )
+            ),
+        )
+        step_years = float(
+            config["time"]["step_years"]
+        )
+        record.update(
+            {
+                "validation_target_year": int(
+                    validation_target_years[0]
+                ),
+                "observed_positive_rate": float(
+                    y.mean()
+                ),
+                "ece": calibration["ece"],
+                "calibration_intercept": calibration[
+                    "calibration_intercept"
+                ],
+                "calibration_slope": calibration[
+                    "calibration_slope"
+                ],
+                "mean_latent_variance": float(
+                    latent_variance.mean()
+                ),
+                "median_latent_variance": float(
+                    np.median(latent_variance)
+                ),
+                "temporal_lengthscale_years": float(
+                    model.temporal_lengthscale.numpy()
+                    * step_years
+                ),
+                "natural_gradient_gamma": float(
+                    history[
+                        "natural_gradient_gamma"
+                    ].iloc[-1]
+                ),
+                "minimum_natural_gradient_gamma": float(
+                    history[
+                        "natural_gradient_gamma"
+                    ].min()
+                ),
+            }
+        )
 
     history.insert(
         0,
@@ -1319,6 +1548,19 @@ def write_preflight(
         exist_ok=True,
     )
 
+    locked_block = config.get(
+        "locked_block",
+        config.get("final_test", {}),
+    )
+    step_years = float(
+        config["time"]["step_years"]
+    )
+    initial_lengthscale_steps = float(
+        config["kernel"][
+            "temporal_initial_lengthscale_steps"
+        ]
+    )
+
     payload = {
         "status": "PASS",
         "model": "st_svgp",
@@ -1349,10 +1591,8 @@ def write_preflight(
             ),
         },
         "kernel": {
-            "temporal_initial_lengthscale_steps": float(
-                config["kernel"][
-                    "temporal_initial_lengthscale_steps"
-                ]
+            "temporal_initial_lengthscale_steps": (
+                initial_lengthscale_steps
             ),
             "temporal_lengthscale_trainable": bool(
                 config["kernel"].get(
@@ -1372,9 +1612,7 @@ def write_preflight(
             ]
         ),
         "final_test_locked_origins": (
-            config["final_test"][
-                "origins"
-            ]
+            locked_block.get("origins", [])
         ),
         "final_test_evaluated": False,
         "runtime": {
@@ -1392,6 +1630,19 @@ def write_preflight(
         },
     }
 
+    if "development" in config:
+        payload["kernel"][
+            "temporal_initial_lengthscale_years"
+        ] = initial_lengthscale_steps * step_years
+        payload["locked_target_years"] = (
+            locked_block.get("target_years", [])
+        )
+        payload["maximum_development_target_year"] = (
+            config["development"][
+                "maximum_target_year"
+            ]
+        )
+
     (
         metadata_directory
         / "preflight.json"
@@ -1405,6 +1656,182 @@ def write_preflight(
     )
 
     return payload
+
+
+def _sample_standard_deviation(
+    values: pd.Series,
+) -> float:
+    return float(values.astype(float).std(ddof=1))
+
+
+def _coefficient_of_variation(
+    values: pd.Series,
+) -> float:
+    numeric = values.astype(float)
+    mean = float(numeric.mean())
+    if math.isclose(mean, 0.0):
+        return float("nan")
+    return _sample_standard_deviation(numeric) / abs(mean)
+
+
+def write_annual_temporal_diagnostic(
+    fold_metrics: pd.DataFrame,
+    config: dict[str, Any],
+) -> Path:
+    """Write the annual diagnostic from observed rolling-fold results."""
+    reporting = config["reporting"]
+    retained_metrics = pd.read_csv(
+        Path(
+            reporting[
+                "retained_five_year_metrics_path"
+            ]
+        )
+    )
+    retained_predictions = pd.read_parquet(
+        Path(
+            reporting[
+                "retained_five_year_predictions_path"
+            ]
+        )
+    )
+
+    retained_calibration_rows = []
+    for fold, part in retained_predictions.groupby(
+        "fold",
+        sort=True,
+    ):
+        values = calibration_metrics(
+            part["target_transition_5y"].to_numpy(
+                dtype=int
+            ),
+            part["probability_raw"].to_numpy(
+                dtype=float
+            ),
+            n_bins=int(reporting["calibration_bins"]),
+            strategy=str(
+                reporting["calibration_strategy"]
+            ),
+        )
+        retained_calibration_rows.append(
+            {"fold": int(fold), **values}
+        )
+    retained_calibration = pd.DataFrame(
+        retained_calibration_rows
+    )
+
+    retained_step_years = float(
+        reporting["retained_five_year_step_years"]
+    )
+    retained_lengthscale_years = (
+        retained_metrics[
+            "temporal_lengthscale_steps"
+        ].astype(float)
+        * retained_step_years
+    )
+    annual_lengthscale_years = fold_metrics[
+        "temporal_lengthscale_years"
+    ].astype(float)
+
+    annual_median = float(
+        annual_lengthscale_years.median()
+    )
+    retained_median = float(
+        retained_lengthscale_years.median()
+    )
+    if math.isclose(
+        annual_median,
+        retained_median,
+        rel_tol=0.05,
+    ):
+        qualitative_scale = "approximately the same"
+    elif annual_median < retained_median:
+        qualitative_scale = "shorter"
+    else:
+        qualitative_scale = "longer"
+
+    annual_lengthscale_cv = _coefficient_of_variation(
+        annual_lengthscale_years
+    )
+    retained_lengthscale_cv = _coefficient_of_variation(
+        retained_lengthscale_years
+    )
+    annual_bias_sd = _sample_standard_deviation(
+        fold_metrics["probability_bias"]
+    )
+    retained_bias_sd = _sample_standard_deviation(
+        retained_metrics["probability_bias"]
+    )
+    annual_ece_sd = _sample_standard_deviation(
+        fold_metrics["ece"]
+    )
+    retained_ece_sd = _sample_standard_deviation(
+        retained_calibration["ece"]
+    )
+    annual_slope_sd = _sample_standard_deviation(
+        fold_metrics["calibration_slope"]
+    )
+    retained_slope_sd = _sample_standard_deviation(
+        retained_calibration["calibration_slope"]
+    )
+
+    if annual_lengthscale_cv < retained_lengthscale_cv:
+        identifiability = (
+            "The annual folds have lower relative temporal-lengthscale "
+            "dispersion than the retained five-year folds, which is "
+            "descriptive evidence of improved temporal identifiability."
+        )
+    else:
+        identifiability = (
+            "The annual folds do not have lower relative temporal-lengthscale "
+            "dispersion than the retained five-year folds, so these results "
+            "do not provide descriptive evidence of improved temporal "
+            "identifiability."
+        )
+
+    uncertainty_rows = "; ".join(
+        f"{int(row.validation_target_year)}: mean {row.mean_latent_variance:.6g}, "
+        f"median {row.median_latent_variance:.6g}"
+        for row in fold_metrics.itertuples(index=False)
+    )
+    lines = [
+        "# Annual ST-SVGP temporal diagnostic",
+        "",
+        "Status: EXPERIMENTAL / PROVISIONAL. Annual manual mapping validation remains deferred.",
+        "The locked 2020-2025 target block was not evaluated.",
+        "",
+        "1. **Temporal lengthscale stability.** "
+        f"Annual physical lengthscales range from {annual_lengthscale_years.min():.6g} "
+        f"to {annual_lengthscale_years.max():.6g} years (CV {annual_lengthscale_cv:.6g}).",
+        "2. **Physical comparison.** "
+        f"The annual median is {annual_median:.6g} years and the retained five-year "
+        f"median is {retained_median:.6g} years; the annual scale is {qualitative_scale}.",
+        "3. **Probability-bias stability.** "
+        f"Fold SD is {annual_bias_sd:.6g} annually versus {retained_bias_sd:.6g} "
+        "for the retained five-year folds.",
+        "4. **Calibration stability.** "
+        f"ECE fold SD is {annual_ece_sd:.6g} annually versus {retained_ece_sd:.6g} "
+        f"retained; calibration-slope fold SD is {annual_slope_sd:.6g} annually "
+        f"versus {retained_slope_sd:.6g} retained.",
+        "5. **Latent uncertainty.** " + uncertainty_rows + ".",
+        "6. **Temporal identifiability.** " + identifiability,
+        "",
+        "One-year and five-year Log Loss values describe different forecasting events "
+        "and are not ranked directly here.",
+    ]
+
+    path = (
+        Path(config["outputs"]["metrics_directory"])
+        / str(
+            reporting[
+                "annual_temporal_diagnostic_filename"
+            ]
+        )
+    )
+    path.write_text(
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
+    )
+    return path
 
 
 def run(
@@ -1489,9 +1916,15 @@ def run(
         ignore_index=True,
     )
 
+    reporting = config.get("reporting", {})
     fold_metrics_path = (
         metrics_directory
-        / "st_svgp_rolling_validation_metrics.csv"
+        / str(
+            reporting.get(
+                "rolling_metrics_filename",
+                "st_svgp_rolling_validation_metrics.csv",
+            )
+        )
     )
     oof_path = (
         predictions_directory
@@ -1514,6 +1947,46 @@ def run(
         history_path,
         index=False,
     )
+
+    temporal_summary_path: Path | None = None
+    diagnostic_path: Path | None = None
+    if bool(
+        reporting.get(
+            "annual_temporal_diagnostics",
+            False,
+        )
+    ):
+        temporal_columns = [
+            "fold",
+            "validation_origin",
+            "validation_target_year",
+            "temporal_lengthscale_steps",
+            "temporal_lengthscale_years",
+            "spatial_lengthscale_x_km",
+            "spatial_lengthscale_y_km",
+            "kernel_variance",
+            "mean_latent_variance",
+            "median_latent_variance",
+            "natural_gradient_gamma",
+            "minimum_natural_gradient_gamma",
+            "minimum_site_precision_eigenvalue",
+        ]
+        temporal_summary_path = (
+            metrics_directory
+            / str(
+                reporting[
+                    "temporal_parameter_summary_filename"
+                ]
+            )
+        )
+        fold_metrics[temporal_columns].to_csv(
+            temporal_summary_path,
+            index=False,
+        )
+        diagnostic_path = write_annual_temporal_diagnostic(
+            fold_metrics,
+            config,
+        )
 
     summary = {
         "folds": int(
@@ -1599,6 +2072,16 @@ def run(
         ),
         "training_history": str(
             history_path
+        ),
+        "temporal_parameter_summary": (
+            str(temporal_summary_path)
+            if temporal_summary_path is not None
+            else None
+        ),
+        "annual_temporal_diagnostic": (
+            str(diagnostic_path)
+            if diagnostic_path is not None
+            else None
         ),
         "final_state": final_state,
         "final_test_evaluated": False,
