@@ -1,0 +1,6 @@
+split,forecast_origin,target_year,row_count,target_inspected,positive_count,positive_rate
+train,2000,2005,197260,True,30314,0.15367535232687823
+train,2005,2010,168945,True,33774,0.1999112137086034
+validation,2010,2015,140194,True,14414,0.10281467109862048
+calibration,2015,2020,127706,False,,
+test,2020,2025,86500,False,,

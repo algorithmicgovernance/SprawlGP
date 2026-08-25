@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "model": "svgp",
+  "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
+  "dataset_sha256": "e8ad4a518e00d506ed6c5112c3f65816a13a64cc298819a6d32be01e6fd1ea0e",
+  "dataset_rows": 720605,
+  "feature_set": "base",
+  "linear_predictors": [
+    "ndbi_t",
+    "savi_t",
+    "distance_to_built_m_t",
+    "built_fraction_11x11_t",
+    "recent_local_growth_5y_t",
+    "elevation_m",
+    "slope_degrees",
+    "log_population_density_t"
+  ],
+  "inference_method": "natgrad",
+  "kernel": {
+    "spatial": "matern32",
+    "temporal": "matern32"
+  },
+  "spatial_inducing_points": 64,
+  "final_test_locked_origins": [
+    2020
+  ],
+  "final_test_evaluated": false,
+  "runtime": {
+    "requested_device": "cpu",
+    "selected_device": "CPU",
+    "physical_gpus_detected": 1,
+    "float_type": "float64",
+    "jitter": 1e-06
+  },
+  "config_sha256": "797ad9e68fc5433872e1bc7d9e5a7894c4b1242877c839585582aa9da2c81136"
+}

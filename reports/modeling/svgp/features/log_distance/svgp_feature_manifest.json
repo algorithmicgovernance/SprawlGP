@@ -1,0 +1,36 @@
+{
+  "generated_at_utc": "2026-08-18T11:57:22.228566+00:00",
+  "feature_set": "log_distance",
+  "config_path": "configs/modeling/svgp_experiment.yaml",
+  "svgp_model_source": "src/models/train_svgp.py",
+  "evaluate_fold_reused": true,
+  "final_fit_executed": false,
+  "runtime": {
+    "requested_device": "cpu",
+    "selected_device": "CPU",
+    "physical_gpus_detected": 1,
+    "float_type": "float32",
+    "jitter": 1e-06
+  },
+  "linear_predictors": [
+    "ndbi_t",
+    "savi_t",
+    "log_distance_to_built_m_t",
+    "built_fraction_11x11_t",
+    "recent_local_growth_5y_t",
+    "elevation_m",
+    "slope_degrees",
+    "log_population_density_t"
+  ],
+  "final_test_locked_origins": [
+    2020
+  ],
+  "outputs": {
+    "validation_metrics": "reports/modeling/svgp/features/log_distance/svgp_feature_validation_metrics.csv",
+    "validation_summary": "reports/modeling/svgp/features/log_distance/svgp_feature_validation_summary.csv",
+    "reliability_bins": "reports/modeling/svgp/features/log_distance/svgp_feature_reliability_bins.csv",
+    "prediction_set_coverage": "reports/modeling/svgp/features/log_distance/svgp_feature_prediction_set_coverage.csv",
+    "training_history": "reports/modeling/svgp/features/log_distance/svgp_feature_training_history.csv",
+    "oof_predictions": "reports/modeling/svgp/features/log_distance/svgp_feature_oof_predictions.parquet"
+  }
+}

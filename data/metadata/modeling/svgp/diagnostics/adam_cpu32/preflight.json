@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "model": "svgp",
+  "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
+  "dataset_sha256": "e8ad4a518e00d506ed6c5112c3f65816a13a64cc298819a6d32be01e6fd1ea0e",
+  "dataset_rows": 720605,
+  "linear_predictors": [
+    "ndbi_t",
+    "savi_t",
+    "distance_to_built_m_t",
+    "built_fraction_11x11_t",
+    "recent_local_growth_5y_t",
+    "elevation_m",
+    "slope_degrees",
+    "log_population_density_t"
+  ],
+  "gp_inputs": [
+    "x_center_m",
+    "y_center_m",
+    "forecast_origin"
+  ],
+  "kernel": "matern32_separable",
+  "spatial_inducing_points": 64,
+  "rolling_validation_folds": [
+    {
+      "train_origins": [
+        2000
+      ],
+      "validation_origin": 2005
+    },
+    {
+      "train_origins": [
+        2000,
+        2005
+      ],
+      "validation_origin": 2010
+    },
+    {
+      "train_origins": [
+        2000,
+        2005,
+        2010
+      ],
+      "validation_origin": 2015
+    }
+  ],
+  "final_fit_origins": [
+    2000,
+    2005,
+    2010,
+    2015
+  ],
+  "final_test_locked_origins": [
+    2020
+  ],
+  "final_test_evaluated": false,
+  "runtime": {
+    "requested_device": "cpu",
+    "selected_device": "CPU",
+    "physical_gpus_detected": 1,
+    "float_type": "float32",
+    "jitter": 1e-06
+  },
+  "config_sha256": "1df6121650033d61c3a05592cd71e99097e1a142a8bcb22c11edab1eeed7f585"
+}

@@ -42,6 +42,7 @@ dependencies = [
   "scikit-learn>=1.4",
   "torch>=2.3",
   "gpytorch>=1.12",
+  "gpflow==2.11.1",
 
   # Visualization
   "matplotlib>=3.8",

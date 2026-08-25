@@ -267,3 +267,289 @@ handover-package:
 
 handover: handover-check handover-package
 	@echo " Handover package created in dist/."
+
+
+# =============================================================================
+# Baseline modelling — logistic regression experiment
+# =============================================================================
+
+# .PHONY: \
+# 	modeling-preflight \
+# 	modeling-logistic \
+# 	modeling-test \
+# 	modeling-baseline \
+# 	modeling-logistic-v3-preflight \
+# 	modeling-logistic-v3-test \
+# 	modeling-logistic-v3
+
+# modeling-preflight:  ## Validate the experiment configuration, feature schema and temporal split contract without running the training job
+# 	python -m src.models.train_logistic \
+# 		--config configs/modeling/experiment_v1.yaml \
+# 		--preflight-only
+
+# modeling-logistic:  ## Train the baseline Logistic Regression model on the frozen training set and save the fitted pipeline, coefficients and performance metrics
+# 	python -m src.models.train_logistic \
+# 		--config configs/modeling/experiment_v1.yaml
+
+# modeling-test:  ## Run the critical unit tests for the baseline modelling pipeline (split integrity, target masking, feature availability)
+# 	python -m pytest tests/test_modeling.py -v
+
+# modeling-baseline: modeling-preflight modeling-logistic modeling-test  ## Execute the complete baseline modelling workflow: preflight checks, training and tests	
+
+# modeling-logistic-v3-preflight:  ## Validate Logistic Regression v3 inputs and temporal contract without fitting
+# 	python -m src.models.train_logistic_rolling \
+# 		--config configs/modeling/experiment_v3.yaml \
+# 		--preflight-only
+
+# modeling-logistic-v3-test:  ## Run unit tests for population transformation, temporal splits and candidate selection
+# 	python -m pytest \
+# 		tests/test_logistic_rolling.py \
+# 		-v
+
+# modeling-logistic-v3:  ## Select the LR specification with rolling temporal validation and refit on all pre-test periods
+# 	python -m src.models.train_logistic_rolling \
+# 		--config configs/modeling/experiment_v3.yaml
+
+# =============================================================================
+# Modelling — selected Logistic Regression baseline
+# =============================================================================
+
+.PHONY: \
+	modeling-logistic-preflight \
+	modeling-logistic-test \
+	modeling-logistic \
+	modeling-logistic-v1
+
+modeling-logistic-preflight:  ## Validate the selected Logistic Regression baseline without fitting
+	python -m src.models.train_logistic \
+		--config configs/modeling/logistic_regression_experiment.yaml \
+		--preflight-only
+
+modeling-logistic-test:  ## Run tests for the selected baseline and retained V1 experiment
+	python -m pytest \
+		tests/test_logistic.py \
+		tests/logistic_regression/test_experiment_v1.py \
+		-v
+
+modeling-logistic:  ## Evaluate historical folds and fit the selected Logistic Regression baseline
+	python -m src.models.train_logistic \
+		--config configs/modeling/logistic_regression_experiment.yaml
+
+modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression experiment
+	python -m src.models.logistic_regression.experiment_v1 \
+		--config configs/modeling/logistic_regression/experiment_v1.yaml
+
+
+# =============================================================================
+# Modelling — Sparse Variational Gaussian Process
+# =============================================================================
+
+# .PHONY: \
+# 	modeling-svgp-preflight \
+# 	modeling-svgp-test \
+# 	modeling-svgp	\
+# 	modeling-svgp-tune \
+# 	modeling-svgp-tune-summary
+
+# modeling-svgp-preflight:  ## Validate SVGP inputs, chronology and runtime
+# 	python -m src.models.train_svgp \
+# 		--config configs/modeling/svgp_experiment.yaml \
+# 		--preflight-only
+
+# modeling-svgp-test:  ## Run the architecture-critical SVGP tests
+# 	python -m pytest tests/test_svgp.py -v
+
+# modeling-svgp:  ## Run rolling SVGP evaluation and fit the four-origin final model
+# 	python -m src.models.train_svgp \
+# 		--config configs/modeling/svgp_experiment.yaml
+
+
+# =============================================================================
+# Modelling — Sparse Variational Gaussian Process
+# =============================================================================
+
+.PHONY: \
+	modeling-svgp-preflight \
+	modeling-svgp \
+	modeling-probability-evaluation \
+	modeling-svgp-feature \
+	modeling-svgp-feature-summary \
+	modeling-svgp-tune \
+	modeling-svgp-tune-summary \
+	modeling-svgp-natgrad-v1-preflight \
+	modeling-svgp-natgrad-v1 
+
+modeling-svgp-preflight:
+	python -m src.models.train_svgp \
+		--config configs/modeling/svgp_experiment.yaml \
+		--preflight-only
+
+modeling-svgp-test:
+	python -m pytest tests/test_svgp.py -v
+
+modeling-svgp:
+	python -m src.models.train_svgp \
+		--config configs/modeling/svgp_experiment.yaml
+
+modeling-probability-evaluation:
+	python -m src.models.evaluation.evaluate_probabilities
+
+# Usage:
+# make modeling-svgp-feature FEATURE_SET=log_distance
+FEATURE_SET ?= base
+modeling-svgp-feature:
+	python -m src.models.svgp.features.experiment \
+		--config configs/modeling/svgp_experiment.yaml \
+		--feature-set $(FEATURE_SET)
+
+modeling-svgp-feature-summary:
+	python -m src.models.svgp.features.experiment --summarize
+
+# Usage:
+# make modeling-svgp-tune CANDIDATE=natgrad_g1e4
+modeling-svgp-tune:
+	python -m src.models.tune_svgp \
+		--candidate $(CANDIDATE)
+
+modeling-svgp-tune-summary:
+	python -m src.models.tune_svgp \
+		--summarize
+
+modeling-svgp-natgrad-v1-preflight:
+	python -m src.models.svgp.natgrad.experiment_v1 \
+		--config configs/modeling/svgp/experiment_v1.yaml \
+		--preflight-only
+
+modeling-svgp-natgrad-v1:
+	python -m src.models.svgp.natgrad.experiment_v1 \
+		--config configs/modeling/svgp/experiment_v1.yaml
+
+# BEGIN ST-SVGP WORKFLOW
+# Canonical promoted ST-SVGP candidate: trainable temporal Matérn-3/2 lengthscale,
+# initialised at 1.5 five-year steps.
+PYTHON ?= python
+ST_SVGP_CONFIG := configs/modeling/st_svgp.yaml
+ST_SVGP_FIXED_1P5_CONFIG := configs/modeling/st_svgp/temporal_lengthscale_fixed_1p5.yaml
+ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
+
+.PHONY: st-svgp-tests st-svgp-test-temporal-kernel st-svgp-test-filter-smoother \
+	st-svgp-test-cvi st-svgp-test-model st-svgp-validate-temporal-kernel \
+	st-svgp-validate-filter-smoother st-svgp-validate-cvi \
+	st-svgp-pretraining-validation st-svgp-preflight st-svgp-rolling \
+	st-svgp-final-fit st-svgp-fixed-1p5-rolling st-svgp-compare-oof \
+	st-svgp-candidate-check
+
+# [01/37] Matérn-3/2 state-space covariance equals direct kernel: ell=0.5, variance=0.3.
+# [02/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.0, variance=1.0.
+# [03/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.5, variance=1.0.
+# [04/37] Matérn-3/2 state-space covariance equals direct kernel: ell=3.0, variance=2.0.
+# [05/37] Closed-form transition A(delta) equals exp(F delta) at delta=0.0.
+# [06/37] Closed-form transition A(delta) equals exp(F delta) at delta=0.1.
+# [07/37] Closed-form transition A(delta) equals exp(F delta) at delta=0.25.
+# [08/37] Closed-form transition A(delta) equals exp(F delta) at delta=1.0.
+# [09/37] Closed-form transition A(delta) equals exp(F delta) at delta=2.5.
+# [10/37] Stationarity identity P_inf=A P_inf A^T+Q holds at delta=0.0.
+# [11/37] Stationarity identity P_inf=A P_inf A^T+Q holds at delta=0.25.
+# [12/37] Stationarity identity P_inf=A P_inf A^T+Q holds at delta=1.0.
+# [13/37] Stationarity identity P_inf=A P_inf A^T+Q holds at delta=2.5.
+# [14/37] Process-noise matrix Q(delta) is PSD at delta=0.0.
+# [15/37] Process-noise matrix Q(delta) is PSD at delta=0.01.
+# [16/37] Process-noise matrix Q(delta) is PSD at delta=0.25.
+# [17/37] Process-noise matrix Q(delta) is PSD at delta=1.0.
+# [18/37] Process-noise matrix Q(delta) is PSD at delta=2.5.
+# [19/37] Process-noise matrix Q(delta) is PSD at delta=10.0.
+# [20/37] GPflow Matérn-3/2 uses the same covariance convention as the custom kernel.
+# [21/37] RTS smoothed marginals equal exact dense-GP posterior marginals on regular times.
+# [22/37] RTS smoothed marginals equal exact dense-GP posterior marginals on irregular times.
+# [23/37] Kalman-filter Gaussian log marginal likelihood equals exact dense-GP value.
+# [24/37] RTS smoothing does not increase marginal function variance relative to filtering.
+# [25/37] Every filtered and smoothed covariance matrix remains PSD.
+# [26/37] Bernoulli-probit expected log likelihood remains finite.
+# [27/37] CVI autodiff moment gradients equal independent finite-difference gradients.
+# [28/37] CVI Gaussian-site state-space posterior equals exact dense Gaussian-site posterior.
+# [29/37] State-space CVI ELBO equals E_q[log p(y|f)] - KL(q||p).
+# [30/37] Natural-Gradient CVI update preserves positive Gaussian-site precision.
+# [31/37] Repeated Natural-Gradient updates improve the fixed synthetic ELBO.
+# [32/37] Integrated Bernoulli-probit predictive probabilities remain strictly in (0,1).
+# [33/37] Anisotropic spatial Matérn-3/2 covariance is symmetric PSD.
+# [34/37] Sparse spatial conditional produces positive predictive variances.
+# [35/37] Block Kalman/RTS inducing posterior equals exact dense Kronecker space-time GP posterior.
+# [36/37] Real config contract keeps 64 inducing points, 9 predictors, CVI and locked 2020 test.
+# [37/37] Frozen ell_t is non-trainable and excluded from Adam variables.
+st-svgp-tests:
+	$(PYTHON) -m pytest \
+		tests/test_st_svgp.py \
+		tests/test_st_svgp_filtering.py \
+		tests/test_st_svgp_cvi.py \
+		tests/test_st_svgp_model.py \
+		-v
+
+# Run only the 20 temporal Matérn/state-space unit tests.
+st-svgp-test-temporal-kernel:
+	$(PYTHON) -m pytest tests/test_st_svgp.py -v
+
+# Run only the 5 Gaussian Kalman-filter / RTS-smoother equivalence tests.
+st-svgp-test-filter-smoother:
+	$(PYTHON) -m pytest tests/test_st_svgp_filtering.py -v
+
+# Run only the 7 Bernoulli-probit CVI / Natural-Gradient validation tests.
+st-svgp-test-cvi:
+	$(PYTHON) -m pytest tests/test_st_svgp_cvi.py -v
+
+# Run only the 5 real-model spatial/block/config-contract tests.
+st-svgp-test-model:
+	$(PYTHON) -m pytest tests/test_st_svgp_model.py -v
+
+# Validate direct Matérn covariance, matrix exponential, stationary covariance,
+# process-noise PSD and GPflow kernel-convention equality.
+st-svgp-validate-temporal-kernel:
+	$(PYTHON) -m src.models.st_svgp.validate_temporal_kernel \
+		--config $(ST_SVGP_VALIDATION_DIR)/temporal_kernel_validation.yaml
+
+# Validate Kalman filtering and RTS smoothing against a dense exact Gaussian-process oracle.
+st-svgp-validate-filter-smoother:
+	$(PYTHON) -m src.models.st_svgp.validate_filter_smoother \
+		--config $(ST_SVGP_VALIDATION_DIR)/filter_smoother_validation.yaml
+
+# Validate Bernoulli-probit CVI, Natural-Gradient moment updates and ELBO identity.
+st-svgp-validate-cvi:
+	$(PYTHON) -m src.models.st_svgp.validate_cvi_natgrad \
+		--config $(ST_SVGP_VALIDATION_DIR)/cvi_natgrad_validation.yaml
+
+# Run every retained mathematical gate before any real-data candidate training.
+st-svgp-pretraining-validation: st-svgp-tests st-svgp-validate-temporal-kernel \
+	st-svgp-validate-filter-smoother st-svgp-validate-cvi
+
+# Validate promoted config and dataset contract without fitting the model.
+st-svgp-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_CONFIG) \
+		--preflight-only
+
+# Reproduce the promoted free-init-1.5 candidate on the three pre-2020 rolling folds.
+st-svgp-rolling:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_CONFIG) \
+		--rolling-only
+
+# Fit the promoted candidate on all pre-test origins (2000-2015).
+# The canonical config still keeps 2020 locked and does not evaluate it.
+st-svgp-final-fit:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_CONFIG)
+
+# Reproduce the retained diagnostic in which ell_t is fixed exactly at 1.5.
+st-svgp-fixed-1p5-rolling:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_FIXED_1P5_CONFIG) \
+		--rolling-only
+
+# Compare LR, Strong SVGP (log_distance_growth) and promoted ST-SVGP with the
+# same probability, calibration and empirical temporal-coverage evaluator.
+st-svgp-compare-oof:
+	$(PYTHON) -m src.models.evaluation.evaluate_probabilities
+
+# Complete pre-2020 candidate workflow.
+st-svgp-candidate-check: st-svgp-pretraining-validation st-svgp-preflight \
+	st-svgp-rolling st-svgp-compare-oof
+# END ST-SVGP WORKFLOW

@@ -1,0 +1,6 @@
+role,fold,train_origins,validation_origin
+historical_validation,1,2000,2005
+historical_validation,2,"2000,2005",2010
+historical_validation,3,"2000,2005,2010",2015
+final_fit,,"2000,2005,2010,2015",
+final_test_locked,,,2020

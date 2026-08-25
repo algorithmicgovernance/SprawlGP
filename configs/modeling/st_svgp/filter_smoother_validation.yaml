@@ -1,0 +1,27 @@
+experiment: filter_smoother_validation
+
+# Mathematical validation only:
+# Gaussian observations + Matérn-3/2 Markov prior.
+# No Bernoulli likelihood, CVI, natural-gradient update, or training loop yet.
+dtype: float64
+
+temporal_kernel:
+  family: matern32_markov
+  lengthscale_steps: 1.5
+  variance: 1.0
+
+# Irregular times are intentional. They verify that the implementation uses
+# the actual delta between adjacent times rather than assuming delta = 1.
+synthetic_data:
+  times: [0.0, 0.4, 1.0, 2.25, 4.0]
+  observations: [0.20, -0.10, 0.35, 0.05, -0.25]
+  observation_noise_variance: 0.15
+
+tolerances:
+  posterior_mean_atol: 1.0e-10
+  posterior_variance_atol: 1.0e-10
+  log_marginal_likelihood_atol: 1.0e-10
+  covariance_psd_tol: 1.0e-10
+
+output:
+  path: reports/modeling/st_svgp/filter_smoother_validation.json

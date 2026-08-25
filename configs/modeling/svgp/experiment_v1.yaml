@@ -1,0 +1,79 @@
+model: svgp
+status: working_reference
+dataset:
+  path: data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet
+  target: target_transition_5y
+  forecast_origin: forecast_origin
+  target_year: target_year
+  cell_id: cell_id
+  x_coordinate: x_center_m
+  y_coordinate: y_center_m
+feature_set: base
+time:
+  origin_year: 2000
+  step_years: 5
+rolling_validation:
+  folds:
+  - train_origins:
+    - 2000
+    validation_origin: 2005
+  - train_origins:
+    - 2000
+    - 2005
+    validation_origin: 2010
+  - train_origins:
+    - 2000
+    - 2005
+    - 2010
+    validation_origin: 2015
+final_fit:
+  origins:
+  - 2000
+  - 2005
+  - 2010
+  - 2015
+final_test:
+  origins:
+  - 2020
+  evaluate: false
+kernel:
+  spatial_family: matern32
+  temporal_family: matern32
+  spatial_initial_lengthscale_km: 2.0
+  temporal_initial_lengthscale_steps: 1.0
+  variance: 1.0
+inducing:
+  spatial_points: 64
+  train_locations: false
+  kmeans_n_init: 10
+inference:
+  method: natgrad
+  adam:
+    learning_rate: 0.001
+  natural_gradient:
+    initial_gamma: 1.0e-06
+    target_gamma: 0.0025
+    ramp_iterations: 800
+    minimum_gamma: 1.0e-08
+    maximum_retries: 6
+    parameterization: natural
+training:
+  batch_size: 1024
+  iterations: 1000
+  final_iterations: 1200
+  shuffle_buffer: 50000
+  log_every: 100
+  prediction_batch_size: 8192
+  random_state: 20260809
+calibration:
+  reliability_bins: 10
+  binning: quantile
+compute:
+  device: cpu
+  float_type: float64
+  jitter: 1.0e-06
+outputs:
+  metadata_directory: data/metadata/modeling/svgp/experiments/v1_natgrad
+  model_directory: artifacts/models/svgp/experiments/v1_natgrad
+  metrics_directory: reports/modeling/svgp/experiments/v1_natgrad/metrics
+  predictions_directory: reports/modeling/svgp/experiments/v1_natgrad/predictions

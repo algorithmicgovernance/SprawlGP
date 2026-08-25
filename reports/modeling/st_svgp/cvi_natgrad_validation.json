@@ -1,0 +1,346 @@
+{
+  "status": "PASS",
+  "experiment": "cvi_natgrad_validation",
+  "dtype": "float64",
+  "temporal_kernel": {
+    "family": "matern32_markov",
+    "lengthscale_steps": 1.5,
+    "variance": 1.0
+  },
+  "cvi": {
+    "quadrature_degree": 40,
+    "natural_gradient_gamma": 0.2,
+    "initial_site_precision": 0.001,
+    "iterations": 25
+  },
+  "checks": {
+    "filter_smoother_matches_dense_site_posterior": true,
+    "filter_site_log_marginal_matches_dense": true,
+    "cvi_elbo_matches_standard_variational_elbo": true,
+    "site_precisions_remain_positive": true,
+    "predictive_probabilities_are_valid": true,
+    "natural_gradient_improves_elbo": true,
+    "natural_gradient_is_monotone_for_validation_case": true
+  },
+  "errors": {
+    "maximum_posterior_mean_abs_error": 6.106226635438361e-16,
+    "maximum_posterior_variance_abs_error": 3.3306690738754696e-16,
+    "maximum_site_log_marginal_abs_error": 3.552713678800501e-15,
+    "maximum_elbo_identity_abs_error": 2.6645352591003757e-15,
+    "minimum_site_precision_seen": 0.0010000000474974513,
+    "minimum_elbo_change": 3.4272467344109714e-06
+  },
+  "elbo": {
+    "initial": -4.996642844413799,
+    "last_before_final_update": -4.132573588294291,
+    "final": -4.132571430188235,
+    "improvement": 0.8640714142255641
+  },
+  "final_posterior": {
+    "marginal_mean": [
+      -0.016695841413830736,
+      0.20523693463006887,
+      0.2779757720099422,
+      0.06366620487497954,
+      0.3850061927572818
+    ],
+    "marginal_variance": [
+      0.4750324532878609,
+      0.41690427191173335,
+      0.43266170639976337,
+      0.48026933022739615,
+      0.5995446978835438
+    ],
+    "predictive_probability": [
+      0.49451591837405134,
+      0.5684459542648138,
+      0.5918237988768441,
+      0.5208665423412611,
+      0.619595057422733
+    ],
+    "site_precision": [
+      0.6077681781059373,
+      0.5686029123321324,
+      0.5514882509877869,
+      0.6242154355717736,
+      0.5221368983432169
+    ]
+  },
+  "history": [
+    {
+      "iteration": 0,
+      "elbo": -4.996642844413799,
+      "posterior_mean_max_abs_error": 0.0,
+      "posterior_variance_max_abs_error": 3.3306690738754696e-16,
+      "site_log_marginal_abs_error": 3.552713678800501e-15,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.0010000000474974513,
+      "minimum_probability": 0.5,
+      "maximum_probability": 0.5
+    },
+    {
+      "iteration": 1,
+      "elbo": -4.551376438163308,
+      "posterior_mean_max_abs_error": 5.898059818321144e-17,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.11993529513221754,
+      "minimum_probability": 0.5072237136303896,
+      "maximum_probability": 0.5355209394840231
+    },
+    {
+      "iteration": 2,
+      "elbo": -4.3587530586511125,
+      "posterior_mean_max_abs_error": 1.3877787807814457e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.21087790196372325,
+      "minimum_probability": 0.507563962511078,
+      "maximum_probability": 0.5579240381202291
+    },
+    {
+      "iteration": 3,
+      "elbo": -4.261288597446335,
+      "posterior_mean_max_abs_error": 1.1102230246251565e-16,
+      "posterior_variance_max_abs_error": 3.3306690738754696e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.28095806081246877,
+      "minimum_probability": 0.5061419788329563,
+      "maximum_probability": 0.573315662405205
+    },
+    {
+      "iteration": 4,
+      "elbo": -4.208069656497523,
+      "posterior_mean_max_abs_error": 1.1102230246251565e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.33516505427139787,
+      "minimum_probability": 0.5043553877589219,
+      "maximum_probability": 0.5843745769307938
+    },
+    {
+      "iteration": 5,
+      "elbo": -4.177715851739414,
+      "posterior_mean_max_abs_error": 2.706168622523819e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.3771820532407266,
+      "minimum_probability": 0.5026445857923162,
+      "maximum_probability": 0.5925409365242269
+    },
+    {
+      "iteration": 6,
+      "elbo": -4.159920977521013,
+      "posterior_mean_max_abs_error": 2.220446049250313e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.40979020639707764,
+      "minimum_probability": 0.5011432569535369,
+      "maximum_probability": 0.5986819677970191
+    },
+    {
+      "iteration": 7,
+      "elbo": -4.149294351512111,
+      "posterior_mean_max_abs_error": 2.220446049250313e-16,
+      "posterior_variance_max_abs_error": 2.220446049250313e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.4351142444963373,
+      "minimum_probability": 0.4998758440801829,
+      "maximum_probability": 0.6033589923294292
+    },
+    {
+      "iteration": 8,
+      "elbo": -4.142865649096954,
+      "posterior_mean_max_abs_error": 2.220446049250313e-16,
+      "posterior_variance_max_abs_error": 2.220446049250313e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 2.6645352591003757e-15,
+      "minimum_site_precision": 0.4547884719292349,
+      "minimum_probability": 0.49882723298133286,
+      "maximum_probability": 0.6069538222859214
+    },
+    {
+      "iteration": 9,
+      "elbo": -4.138939875612341,
+      "posterior_mean_max_abs_error": 3.5388358909926865e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.470075298122877,
+      "minimum_probability": 0.4979695814132253,
+      "maximum_probability": 0.6097356195965713
+    },
+    {
+      "iteration": 10,
+      "elbo": -4.136525833745692,
+      "posterior_mean_max_abs_error": 2.7755575615628914e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.4819525504323579,
+      "minimum_probability": 0.49727302458641826,
+      "maximum_probability": 0.6118992264730179
+    },
+    {
+      "iteration": 11,
+      "elbo": -4.135033593556709,
+      "posterior_mean_max_abs_error": 2.7755575615628914e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.4911790106381218,
+      "minimum_probability": 0.49670984042828115,
+      "maximum_probability": 0.6135885339021271
+    },
+    {
+      "iteration": 12,
+      "elbo": -4.134107466972685,
+      "posterior_mean_max_abs_error": 2.220446049250313e-16,
+      "posterior_variance_max_abs_error": 1.6653345369377348e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.49834419887539577,
+      "minimum_probability": 0.49625584671604095,
+      "maximum_probability": 0.614911439112486
+    },
+    {
+      "iteration": 13,
+      "elbo": -4.133530907113826,
+      "posterior_mean_max_abs_error": 6.106226635438361e-16,
+      "posterior_variance_max_abs_error": 1.6653345369377348e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.5039064930886681,
+      "minimum_probability": 0.4958906170119694,
+      "maximum_probability": 0.615949804282425
+    },
+    {
+      "iteration": 14,
+      "elbo": -4.133171103633547,
+      "posterior_mean_max_abs_error": 4.0245584642661925e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.5082224760549221,
+      "minimum_probability": 0.4955972131365581,
+      "maximum_probability": 0.6167663047356572
+    },
+    {
+      "iteration": 15,
+      "elbo": -4.132946141375788,
+      "posterior_mean_max_abs_error": 3.885780586188048e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.511569614646572,
+      "minimum_probability": 0.4953617478319613,
+      "maximum_probability": 0.6174092650620396
+    },
+    {
+      "iteration": 16,
+      "elbo": -4.132805275219264,
+      "posterior_mean_max_abs_error": 3.885780586188048e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.5141638333550969,
+      "minimum_probability": 0.4951729179887888,
+      "maximum_probability": 0.6179161498565151
+    },
+    {
+      "iteration": 17,
+      "elbo": -4.132716962101966,
+      "posterior_mean_max_abs_error": 3.3306690738754696e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.5161731575074463,
+      "minimum_probability": 0.4950215683931926,
+      "maximum_probability": 0.618316128921231
+    },
+    {
+      "iteration": 18,
+      "elbo": -4.1326615424264785,
+      "posterior_mean_max_abs_error": 2.220446049250313e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 1.7763568394002505e-15,
+      "minimum_site_precision": 0.5177283194970856,
+      "minimum_probability": 0.4949003081934745,
+      "maximum_probability": 0.6186319900653477
+    },
+    {
+      "iteration": 19,
+      "elbo": -4.132626737208298,
+      "posterior_mean_max_abs_error": 1.6653345369377348e-16,
+      "posterior_variance_max_abs_error": 2.220446049250313e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.5189310118393033,
+      "minimum_probability": 0.49480318473521095,
+      "maximum_probability": 0.6188815824052545
+    },
+    {
+      "iteration": 20,
+      "elbo": -4.132604864365343,
+      "posterior_mean_max_abs_error": 8.326672684688674e-17,
+      "posterior_variance_max_abs_error": 1.6653345369377348e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.5198603132428918,
+      "minimum_probability": 0.4947254116225034,
+      "maximum_probability": 0.6190789158347895
+    },
+    {
+      "iteration": 21,
+      "elbo": -4.1325911113166525,
+      "posterior_mean_max_abs_error": 3.3306690738754696e-16,
+      "posterior_variance_max_abs_error": 2.220446049250313e-16,
+      "site_log_marginal_abs_error": 1.7763568394002505e-15,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.5205776941747546,
+      "minimum_probability": 0.49466314481267315,
+      "maximum_probability": 0.6192350049968985
+    },
+    {
+      "iteration": 22,
+      "elbo": -4.1325824598752146,
+      "posterior_mean_max_abs_error": 3.0531133177191805e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.5211309168161262,
+      "minimum_probability": 0.49461329977681656,
+      "maximum_probability": 0.6193585210921075
+    },
+    {
+      "iteration": 23,
+      "elbo": -4.132577015541026,
+      "posterior_mean_max_abs_error": 1.6653345369377348e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 0.0,
+      "minimum_site_precision": 0.521557073880785,
+      "minimum_probability": 0.49457340303052233,
+      "maximum_probability": 0.6194562977249488
+    },
+    {
+      "iteration": 24,
+      "elbo": -4.132573588294291,
+      "posterior_mean_max_abs_error": 1.6653345369377348e-16,
+      "posterior_variance_max_abs_error": 1.1102230246251565e-16,
+      "site_log_marginal_abs_error": 0.0,
+      "elbo_identity_abs_error": 8.881784197001252e-16,
+      "minimum_site_precision": 0.5218849563850473,
+      "minimum_probability": 0.4945414720438167,
+      "maximum_probability": 0.6195337249890303
+    }
+  ]
+}

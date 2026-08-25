@@ -1,0 +1,60 @@
+model: logistic_regression
+status: selected_baseline
+
+dataset:
+  path: data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet
+  target: target_transition_5y
+  forecast_origin: forecast_origin
+  target_year: target_year
+  cell_id: cell_id
+
+feature_set: log_distance_growth 
+
+features:
+  - ndbi_t
+  - savi_t
+  - log_distance_to_built_m_t
+  - built_fraction_11x11_t
+  - recent_local_growth_5y_t
+  - elevation_m
+  - slope_degrees
+  - log_population_density_t
+  - built_fraction_x_recent_growth_t
+  - x_center_m
+  - y_center_m
+
+derived_features:
+  log_population_density_t:
+    source: population_density_t
+    transformation: log1p
+
+# Historical evaluation of the already-selected baseline.
+rolling_validation:
+  folds:
+    - train_origins: [2000]
+      validation_origin: 2005
+    - train_origins: [2000, 2005]
+      validation_origin: 2010
+    - train_origins: [2000, 2005, 2010]
+      validation_origin: 2015
+
+# Refit on every pre-test transition.
+final_fit:
+  origins: [2000, 2005, 2010, 2015]
+
+# Locked until the common final model-comparison stage.
+final_test:
+  origins: [2020]
+  evaluate: false
+
+logistic_regression:
+  C: 0.1
+  solver: lbfgs
+  max_iter: 1000
+  random_state: 20260807
+
+outputs:
+  metadata_directory: data/metadata/modeling/logistic_regression
+  model_directory: artifacts/models/logistic_regression
+  metrics_directory: reports/modeling/logistic_regression/metrics
+  predictions_directory: reports/modeling/logistic_regression/predictions

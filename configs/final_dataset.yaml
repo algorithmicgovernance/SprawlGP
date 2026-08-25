@@ -43,6 +43,17 @@ population:
   collection: JRC/GHSL/P2023A/GHS_POP
   band: population_count
 
+  # GHSL population_count is the absolute number of inhabitants
+  # in each native approximately 100 m cell.
+  source_unit: persons_per_native_cell
+
+  # Predictor exported to the modelling table.
+  output_unit: persons_per_square_kilometre
+
+  # Preserve the native population-density surface when evaluated
+  # on the fixed 30 m project grid.
+  resampling: nearest
+
 exports:
   asset_root: projects/urban-sprawl-ssa/assets/sprawlgp/v2/final_dataset
   state_folder: states
@@ -53,7 +64,8 @@ exports:
   shard_size: 256
   priority: 100
 
-  drive_folder: SprawlGP_v1_cell_time
+  # drive_folder: SprawlGP_v1_cell_time
+  drive_folder: SprawlGP_v2_population_fix
   table_file_prefix: cell_time
 
 metadata:
