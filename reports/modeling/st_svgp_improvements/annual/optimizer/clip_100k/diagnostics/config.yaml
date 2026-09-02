@@ -1,0 +1,17 @@
+smoothing_window_rows: 5
+tail_window_rows: 5
+
+histories:
+  - experiment_id: annual_1500
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+
+  - experiment_id: OPT-A01_clip_100k
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_improvements/annual/optimizer/clip_100k/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 100000.0
+
+output_dir: reports/modeling/st_svgp_improvements/annual/optimizer/clip_100k/diagnostics

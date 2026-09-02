@@ -1,0 +1,133 @@
+{
+  "status": "PASS",
+  "model": "st_svgp",
+  "feature_set": "log_distance_growth",
+  "rows": 2416367,
+  "linear_predictors": [
+    "ndbi_t",
+    "savi_t",
+    "log_distance_to_built_m_t",
+    "built_fraction_11x11_t",
+    "recent_local_growth_1y_t",
+    "elevation_m",
+    "slope_degrees",
+    "log_population_density_t",
+    "built_fraction_x_recent_growth_t"
+  ],
+  "spatial_inducing_points": 128,
+  "inference": {
+    "method": "dense_cvi_natural_gradient",
+    "filtering": "sequential",
+    "smoothing": "rts",
+    "natural_gradient_gamma": 0.01
+  },
+  "kernel": {
+    "temporal_initial_lengthscale_steps": 7.5,
+    "temporal_lengthscale_trainable": true,
+    "temporal_initial_lengthscale_years": 7.5
+  },
+  "rolling_validation": [
+    {
+      "train_origins": [
+        2000,
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009
+      ],
+      "validation_origin": 2010
+    },
+    {
+      "train_origins": [
+        2000,
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014
+      ],
+      "validation_origin": 2015
+    },
+    {
+      "train_origins": [
+        2000,
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017
+      ],
+      "validation_origin": 2018
+    }
+  ],
+  "final_fit_origins": [
+    2000,
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "final_test_locked_origins": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "final_test_evaluated": false,
+  "runtime": {
+    "device": "cpu",
+    "float_type": "float64",
+    "jitter": 1e-06
+  },
+  "locked_target_years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "maximum_development_target_year": 2019
+}

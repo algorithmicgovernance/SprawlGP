@@ -43,6 +43,7 @@ dependencies = [
   "torch>=2.3",
   "gpytorch>=1.12",
   "gpflow==2.11.1",
+  "shap>=0.46,<0.50",
 
   # Visualization
   "matplotlib>=3.8",

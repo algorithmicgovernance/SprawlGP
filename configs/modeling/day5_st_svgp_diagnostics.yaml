@@ -1,0 +1,29 @@
+random_state: 20260809
+probability_epsilon: 1.0e-12
+output_directory: reports/modeling/day5_diagnostics
+
+horizons:
+  annual_1y:
+    label: Annual 1-year ST-SVGP
+    model_config: configs/modeling/st_svgp_annual/convergence_3000.yaml
+    output_subdirectory: annual_1y
+    maximum_target_year: 2019
+  five_year_5y:
+    label: Five-year ST-SVGP
+    model_config: configs/modeling/st_svgp.yaml
+    output_subdirectory: five_year_5y
+    locked_forecast_origins: [2020]
+
+diagnostics:
+  distance_quantiles: [0.3333333333333333, 0.6666666666666666]
+  error_quantiles: [0.25, 0.75]
+  uncertainty_bins: 5
+  map_dpi: 180
+
+shap:
+  background_size: 40
+  pilot_rows: 10
+  maximum_explained_rows_before_authorization: 120
+  nsamples: 128
+  reproduction_rtol: 1.0e-6
+  reproduction_atol: 1.0e-8

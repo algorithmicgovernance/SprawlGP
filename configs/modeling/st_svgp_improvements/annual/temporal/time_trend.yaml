@@ -1,0 +1,120 @@
+model: st_svgp
+status: experimental_provisional
+experiment: annual_temporal_resolution
+
+dataset:
+  path: data/final/yaounde_urban_expansion_30m_annual_v1/cell_time_dataset.parquet
+  target: target_transition_1y
+  forecast_origin: forecast_origin
+  target_year: target_year
+  cell_id: cell_id
+  x_coordinate: x_center_m
+  y_coordinate: y_center_m
+
+feature_set: log_distance_growth
+
+feature_engineering:
+  recent_growth_column: recent_local_growth_1y_t
+
+linear_predictors:
+  - ndbi_t
+  - savi_t
+  - log_distance_to_built_m_t
+  - built_fraction_11x11_t
+  - recent_local_growth_1y_t
+  - elevation_m
+  - slope_degrees
+  - log_population_density_t
+  - built_fraction_x_recent_growth_t
+
+time:
+  origin_year: 2000
+  step_years: 1
+
+mean:
+  temporal_trend:
+    enabled: true
+    reference_year: 2000
+    scale_years: 10.0
+    initial_coefficient: 0.0
+
+development:
+  maximum_target_year: 2019
+
+rolling_validation:
+  folds:
+    - train_origins: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009]
+      validation_origin: 2010
+    - train_origins: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
+      validation_origin: 2015
+    - train_origins: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]
+      validation_origin: 2018
+
+final_fit:
+  origins: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018]
+
+locked_block:
+  origins: [2019, 2020, 2021, 2022, 2023, 2024]
+  target_years: [2020, 2021, 2022, 2023, 2024, 2025]
+  evaluate: false
+
+kernel:
+  spatial_family: matern32
+  temporal_family: matern32_markov
+  spatial_initial_lengthscale_km: 2.0
+  temporal_initial_lengthscale_steps: 7.5
+  temporal_lengthscale_trainable: true
+  variance: 1.0
+
+inducing:
+  spatial_points: 64
+  train_locations: false
+  kmeans_n_init: 10
+
+inference:
+  method: cvi_natural_gradient
+  filtering: sequential
+  smoothing: rts
+  initial_site_precision: 1.0e-3
+  natural_gradient_gamma: 0.01
+  minimum_gamma: 1.0e-6
+  maximum_retries: 8
+  minimum_site_eigenvalue: 1.0e-9
+  quadrature_degree: 20
+
+training:
+  batch_size: 1024
+  iterations: 1500
+  final_iterations: 1200
+  adam_learning_rate: 0.001
+  gradient_clip_norm: 10.0
+  log_every: 50
+  prediction_batch_size: 8192
+  random_state: 20260809
+
+compute:
+  device: cpu
+  float_type: float64
+  jitter: 1.0e-6
+
+provisional_status:
+  mapping_validation: deferred
+  manual_validation_complete: false
+  persistence_rule: absorbing_after_first_valid_built_observation
+
+reporting:
+  annual_temporal_diagnostics: true
+  calibration_bins: 10
+  calibration_strategy: quantile
+  rolling_metrics_filename: rolling_metrics.csv
+  temporal_parameter_summary_filename: temporal_parameter_summary.csv
+  annual_temporal_diagnostic_filename: annual_temporal_diagnostic.md
+  retained_five_year_metrics_path: reports/modeling/st_svgp/metrics/st_svgp_rolling_validation_metrics.csv
+  retained_five_year_predictions_path: reports/modeling/st_svgp/predictions/st_svgp_oof_predictions.parquet
+  retained_five_year_step_years: 5
+
+outputs:
+  metadata_directory: reports/modeling/st_svgp_improvements/annual/temporal/time_trend/metadata
+  model_directory: reports/modeling/st_svgp_improvements/annual/temporal/time_trend/models
+  metrics_directory: reports/modeling/st_svgp_improvements/annual/temporal/time_trend/metrics
+  predictions_directory: reports/modeling/st_svgp_improvements/annual/temporal/time_trend/predictions

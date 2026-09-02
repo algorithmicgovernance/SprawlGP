@@ -1,0 +1,10 @@
+{
+  "folds": 3,
+  "mean_log_loss": 0.23315768303402185,
+  "std_log_loss": 0.13338610262315254,
+  "mean_brier_score": 0.061741007392634294,
+  "mean_pr_auc": 0.16888904613444486,
+  "mean_roc_auc": 0.7990556433193355,
+  "mean_probability_bias": 0.028803366046307743,
+  "final_test_evaluated": false
+}

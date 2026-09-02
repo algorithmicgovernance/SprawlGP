@@ -1,0 +1,16 @@
+output_dir: reports/modeling/st_svgp_improvements/annual/combined/time_trend_stabilized_optimizer_early_stopping/diagnostics
+smoothing_window_rows: 5
+tail_window_rows: 6
+
+histories:
+  - experiment_id: EARLY-STOP-A01
+    horizon: annual_1y
+    step_years: 1
+    gradient_clip_norm: 10.0
+    path: reports/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping/metrics/st_svgp_training_history.csv
+
+  - experiment_id: COMB-A02
+    horizon: annual_1y
+    step_years: 1
+    gradient_clip_norm: 100000.0
+    path: reports/modeling/st_svgp_improvements/annual/combined/time_trend_stabilized_optimizer_early_stopping/metrics/st_svgp_training_history.csv

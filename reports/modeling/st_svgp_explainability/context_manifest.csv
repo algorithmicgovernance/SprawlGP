@@ -1,0 +1,13 @@
+horizon,fold,forecast_origin,target_year,context_id,distance_context,context_cell_id,context_x_m,context_y_m,selection_rule
+annual_1y,1,2010,2011,annual_1y_fold_1_near_built,near_built,591696,775965.0,425385.0,real observation nearest coordinate centroid
+annual_1y,1,2010,2011,annual_1y_fold_1_peripheral,peripheral,567026,773745.0,426165.0,real observation nearest coordinate centroid
+annual_1y,2,2015,2016,annual_1y_fold_2_near_built,near_built,590774,776685.0,425415.0,real observation nearest coordinate centroid
+annual_1y,2,2015,2016,annual_1y_fold_2_peripheral,peripheral,579351,774555.0,425775.0,real observation nearest coordinate centroid
+annual_1y,3,2018,2019,annual_1y_fold_3_near_built,near_built,612509,775995.0,424725.0,real observation nearest coordinate centroid
+annual_1y,3,2018,2019,annual_1y_fold_3_peripheral,peripheral,556628,773985.0,426495.0,real observation nearest coordinate centroid
+five_year_5y,1,2005,2010,five_year_5y_fold_1_near_built,near_built,558651,777915.0,426435.0,real observation nearest coordinate centroid
+five_year_5y,1,2005,2010,five_year_5y_fold_1_peripheral,peripheral,681553,775575.0,422535.0,real observation nearest coordinate centroid
+five_year_5y,2,2010,2015,five_year_5y_fold_2_near_built,near_built,561473,777435.0,426345.0,real observation nearest coordinate centroid
+five_year_5y,2,2010,2015,five_year_5y_fold_2_peripheral,peripheral,673922,773685.0,422775.0,real observation nearest coordinate centroid
+five_year_5y,3,2015,2020,five_year_5y_fold_3_near_built,near_built,566191,777075.0,426195.0,real observation nearest coordinate centroid
+five_year_5y,3,2015,2020,five_year_5y_fold_3_peripheral,peripheral,690005,773715.0,422265.0,real observation nearest coordinate centroid

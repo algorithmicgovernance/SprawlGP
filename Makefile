@@ -1,3 +1,5 @@
+PYTHON ?= python
+
 # =============================================================================
 #  Administrative boundaries and study grid
 # =============================================================================
@@ -74,7 +76,12 @@ day2: landsat-catalog landsat-visuals test-landsat ## Execute the complete Day 2
 	annual-build-tables \
 	annual-tables-status \
 	annual-tables-assemble \
+	annual-diagnostic-preflight \
+	annual-diagnostic-sample \
+	annual-diagnostic-expand-sample \
+	annual-diagnostic-evaluate \
 	test-annual-dataset \
+	test-annual-diagnostic \
 	test-annual
 
 annual-catalog: ## Build the isolated 2000-2025 calendar-year Landsat catalogue
@@ -137,12 +144,35 @@ annual-tables-assemble: ## Assemble downloaded annual table exports into Parquet
 		--config configs/annual/annual_dataset.yaml \
 		--assemble
 
+annual-diagnostic-preflight: ## Validate annual diagnostic inputs without mutation
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--preflight
+
+annual-diagnostic-sample: ## Generate the annual diagnostic sample and blind review files
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--sample
+
+annual-diagnostic-expand-sample: ## Generate one evidence-driven reserve expansion file
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--expand
+
+annual-diagnostic-evaluate: ## Evaluate independently reviewed annual diagnostic labels
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--evaluate
+
 test-annual-dataset: ## Run isolated annual Day 3 tests
 	python -m pytest \
 		tests/test_annual_catalog.py \
 		tests/test_annual_asset_isolation.py \
 		tests/test_annual_dataset.py \
 		-v
+
+test-annual-diagnostic: ## Run the isolated annual diagnostic tests
+	$(PYTHON) -m pytest tests/test_annual_diagnostic.py -v
 
 test-annual: ## Run all annual catalogue, isolation and Day 3 dataset tests
 	pytest \
@@ -537,6 +567,9 @@ ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG := configs/modeling/st_svgp_annual/conver
 ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG := configs/modeling/st_svgp_annual/convergence_3000.yaml
 ST_SVGP_FIXED_1P5_CONFIG := configs/modeling/st_svgp/temporal_lengthscale_fixed_1p5.yaml
 ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
+ST_SVGP_DAY5_CONFIG := configs/modeling/day5_st_svgp_diagnostics.yaml
+
+ST_SVGP_EARLY_CLIP_100K_CONFIG := configs/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping_clip_100k.yaml
 
 .PHONY: st-svgp-tests st-svgp-test-temporal-kernel st-svgp-test-filter-smoother \
 	st-svgp-test-cvi st-svgp-test-model st-svgp-validate-temporal-kernel \
@@ -550,7 +583,14 @@ ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
 	st-svgp-annual-convergence-3000-preflight \
 	st-svgp-annual-convergence-3000 \
 	st-svgp-annual-convergence-3000-evaluate \
-	st-svgp-annual-3000-calibration
+	st-svgp-annual-3000-calibration \
+	day5-st-svgp-preflight day5-st-svgp-oof-diagnostics \
+	day5-st-svgp-shap-preflight day5-st-svgp-shap-pilot \
+	day5-st-svgp-reconstruction-preflight \
+	day5-st-svgp-reconstruct-gate-a \
+	st-svgp-reconstruct-remaining-folds st-svgp-shap \
+	st-svgp-early-clip-100k-preflight \
+	st-svgp-early-clip-100k
 
 # [01/37] Matérn-3/2 state-space covariance equals direct kernel: ell=0.5, variance=0.3.
 # [02/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.0, variance=1.0.
@@ -695,6 +735,50 @@ st-svgp-annual-convergence-3000-evaluate:
 st-svgp-annual-3000-calibration:
 	$(PYTHON) -m src.models.evaluation.st_svgp_annual_temporal_calibration
 
+# Validate both retained OOF/data contracts, temporal locks, and state-directory availability.
+day5-st-svgp-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_diagnostics \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--preflight-only
+
+# Generate OOF failure diagnostics for both horizons without fitting a model.
+day5-st-svgp-oof-diagnostics:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_diagnostics \
+		--config $(ST_SVGP_DAY5_CONFIG)
+
+# Validate frozen reconstruction inputs, hashes, folds, and locks without training.
+day5-st-svgp-reconstruction-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--preflight-only
+
+# Reconstruct only annual Fold 1 and five-year Fold 1, with fail-stop comparison.
+day5-st-svgp-reconstruct-gate-a:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--gate-a
+
+# Reconstruct only the four authorized rolling Folds 2 and 3, then consolidate.
+st-svgp-reconstruct-remaining-folds:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--remaining-folds
+
+# Require real rolling states and exact retained-OOF reproduction before SHAP.
+day5-st-svgp-shap-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_shap \
+		--config $(ST_SVGP_DAY5_CONFIG)
+
+# Run only the bounded KernelExplainer pilot after the reload gate passes.
+day5-st-svgp-shap-pilot:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_shap \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--pilot
+
+# Run the single final context-conditioned SHAP analysis from verified states.
+st-svgp-shap:
+	$(PYTHON) -m src.models.evaluation.st_svgp_explainability
+
 # Fit the promoted candidate on all pre-test origins (2000-2015).
 # The canonical config still keeps 2020 locked and does not evaluate it.
 st-svgp-final-fit:
@@ -721,3 +805,19 @@ st-svgp-compare-oof:
 st-svgp-candidate-check: st-svgp-pretraining-validation st-svgp-preflight \
 	st-svgp-rolling st-svgp-compare-oof
 # END ST-SVGP WORKFLOW
+
+# Validate EARLY-CLIP-A01 without training.
+# Exact EARLY-STOP-A01 sensitivity experiment with only clip 10 -> 100000.
+st-svgp-early-clip-100k-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_EARLY_CLIP_100K_CONFIG) \
+		--preflight-only
+
+
+# Run EARLY-CLIP-A01 on the same three strict pre-2020 rolling folds.
+# The only scientific change relative to EARLY-STOP-A01 is
+# gradient_clip_norm: 10.0 -> 100000.0.
+st-svgp-early-clip-100k:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_EARLY_CLIP_100K_CONFIG) \
+		--rolling-only

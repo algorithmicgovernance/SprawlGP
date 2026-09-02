@@ -1,0 +1,16 @@
+smoothing_window_rows: 5
+tail_window_rows: 5
+
+histories:
+  - experiment_id: TREN-A01_time_trend
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_improvements/annual/temporal/time_trend/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+  - experiment_id: IND-A01_trainable_inducing_locations
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_improvements/annual/inducing/trainable_locations/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+
+output_dir: reports/modeling/st_svgp_improvements/annual/inducing/trainable_locations/diagnostics

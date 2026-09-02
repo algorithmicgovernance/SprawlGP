@@ -1,0 +1,10 @@
+feature,mean_shap_low_feature_values,mean_shap_high_feature_values,spearman_feature_value_vs_shap,direction_summary
+built_fraction_11x11_t,0.00826163515227694,-0.006176598169472658,-0.9234022760671287,higher values generally push probability downward
+built_fraction_x_recent_growth_t,0.0025359632589079667,-0.0027196625764340757,-0.5027285824317939,higher values generally push probability downward
+elevation_m,-0.03639741386205612,0.03570623613791154,0.9553409984466773,higher values generally push probability upward
+log_distance_to_built_m_t,0.034399206279231084,-0.04954496168261839,-0.9717420274460984,higher values generally push probability downward
+log_population_density_t,-0.09034870524860204,0.07904800305030614,0.9538935375274371,higher values generally push probability upward
+ndbi_t,-0.11615858029296952,0.11438952448477503,0.9924979160878025,higher values generally push probability upward
+recent_local_growth_5y_t,-0.011931029905048567,0.013469921647276934,0.6421398426576437,higher values generally push probability upward
+savi_t,-0.016470164610753582,0.007754898129177921,0.6876354542928592,higher values generally push probability upward
+slope_degrees,0.010396346516412417,-0.007196753425370957,-0.8769102528480134,higher values generally push probability downward

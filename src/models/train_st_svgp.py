@@ -28,6 +28,7 @@ import argparse
 import json
 import math
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -80,10 +81,25 @@ class TimeData:
 
     origin: int
     time_step: float
+    temporal_trend_time: float | None
     features: np.ndarray
     coordinates_km: np.ndarray
     targets: np.ndarray
     row_index: np.ndarray
+
+
+@dataclass(frozen=True)
+class FittedFoldState:
+    """Objects still in memory when one rolling fold finishes fitting."""
+
+    model: STSVGPModel
+    sites: DenseCviSites
+    preprocessing: FoldPreprocessing
+    train_origins: tuple[int, ...]
+    validation_origin: int
+
+
+FoldStateCallback = Callable[[FittedFoldState], None]
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -358,6 +374,29 @@ def time_step(
     ) / float(time_config["step_years"])
 
 
+def temporal_trend_time(
+    origin: int,
+    config: dict[str, Any],
+) -> float | None:
+    trend = config.get("mean", {}).get(
+        "temporal_trend",
+        {},
+    )
+    if not bool(trend.get("enabled", False)):
+        return None
+
+    scale_years = float(trend["scale_years"])
+    if scale_years <= 0.0:
+        raise ValueError(
+            "mean.temporal_trend.scale_years must be positive."
+        )
+
+    return (
+        int(origin)
+        - int(trend["reference_year"])
+    ) / scale_years
+
+
 def fit_preprocessing(
     train_frame: pd.DataFrame,
     config: dict[str, Any],
@@ -569,6 +608,10 @@ def prepare_time_data(
                     int(origin),
                     config,
                 ),
+                temporal_trend_time=temporal_trend_time(
+                    int(origin),
+                    config,
+                ),
                 features=scaled_features,
                 coordinates_km=coordinates,
                 targets=targets,
@@ -591,6 +634,7 @@ def sample_batches(
         tf.Tensor,
         tf.Tensor,
         float,
+        float | None,
     ]
 ]:
     """Sample approximately equal-size real-prevalence batches across time."""
@@ -637,6 +681,7 @@ def sample_batches(
                     dtype=dtype,
                 ),
                 likelihood_scale,
+                data.temporal_trend_time,
             )
         )
 
@@ -650,6 +695,10 @@ def model_from_preprocessing(
     dtype: tf.dtypes.DType,
 ) -> STSVGPModel:
     kernel = config["kernel"]
+    temporal_trend = config.get("mean", {}).get(
+        "temporal_trend",
+        {},
+    )
     return STSVGPModel(
         inducing_locations_km=tf.constant(
             preprocessing.inducing_locations_km,
@@ -674,6 +723,9 @@ def model_from_preprocessing(
                 True,
             )
         ),
+        inducing_locations_trainable=bool(
+            config["inducing"]["train_locations"]
+        ),
         variance_initial=float(
             kernel["variance"]
         ),
@@ -684,6 +736,18 @@ def model_from_preprocessing(
             config["inference"][
                 "quadrature_degree"
             ]
+        ),
+        temporal_trend_enabled=bool(
+            temporal_trend.get(
+                "enabled",
+                False,
+            )
+        ),
+        temporal_trend_initial_coefficient=float(
+            temporal_trend.get(
+                "initial_coefficient",
+                0.0,
+            )
         ),
         dtype=dtype,
     )
@@ -700,6 +764,7 @@ def natural_gradient_step(
             tf.Tensor,
             tf.Tensor,
             float,
+            float | None,
         ]
     ],
     config: dict[str, Any],
@@ -713,11 +778,15 @@ def natural_gradient_step(
         coordinates,
         targets,
         likelihood_scale,
+        temporal_trend_value,
     ) in enumerate(batches):
         target1, target2 = (
             model.cvi_natural_targets(
                 targets=targets,
                 features=features,
+                temporal_trend_time=(
+                    temporal_trend_value
+                ),
                 coordinates_km=coordinates,
                 inducing_mean=tf.stop_gradient(
                     posterior.inducing_means[
@@ -777,6 +846,324 @@ def natural_gradient_step(
     )
 
 
+def spatial_kernel_regularization(
+    *,
+    spatial_lengthscales_km: tf.Tensor,
+    kernel_variance: tf.Tensor,
+    regularization: dict[str, Any] | None,
+) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    """Return total, spatial-lengthscale, and kernel-variance penalties."""
+    lengthscales = tf.convert_to_tensor(
+        spatial_lengthscales_km
+    )
+    variance = tf.convert_to_tensor(
+        kernel_variance,
+        dtype=lengthscales.dtype,
+    )
+    zero = tf.zeros([], dtype=lengthscales.dtype)
+    settings = regularization or {}
+
+    lengthscale_penalty = zero
+    lengthscale_settings = settings.get(
+        "spatial_log_lengthscale",
+        {},
+    )
+    if bool(lengthscale_settings.get("enabled", False)):
+        center = tf.cast(
+            lengthscale_settings["center_km"],
+            lengthscales.dtype,
+        )
+        sigma = tf.cast(
+            lengthscale_settings["sigma_log"],
+            lengthscales.dtype,
+        )
+        weight = tf.cast(
+            lengthscale_settings["weight"],
+            lengthscales.dtype,
+        )
+        standardized = (
+            tf.math.log(lengthscales)
+            - tf.math.log(center)
+        ) / sigma
+        lengthscale_penalty = (
+            tf.cast(0.5, lengthscales.dtype)
+            * weight
+            * tf.reduce_sum(tf.square(standardized))
+        )
+
+    variance_penalty = zero
+    variance_settings = settings.get(
+        "kernel_log_variance",
+        {},
+    )
+    if bool(variance_settings.get("enabled", False)):
+        center = tf.cast(
+            variance_settings["center"],
+            lengthscales.dtype,
+        )
+        sigma = tf.cast(
+            variance_settings["sigma_log"],
+            lengthscales.dtype,
+        )
+        weight = tf.cast(
+            variance_settings["weight"],
+            lengthscales.dtype,
+        )
+        standardized = (
+            tf.math.log(variance)
+            - tf.math.log(center)
+        ) / sigma
+        variance_penalty = (
+            tf.cast(0.5, lengthscales.dtype)
+            * weight
+            * tf.square(standardized)
+        )
+
+    return (
+        lengthscale_penalty + variance_penalty,
+        lengthscale_penalty,
+        variance_penalty,
+    )
+
+
+def temporal_lengthscale_regularization(
+    temporal_lengthscale_steps: tf.Tensor,
+    *,
+    step_years: float,
+    regularization: dict[str, Any] | None,
+) -> tf.Tensor:
+    """Return the physical-year temporal log-lengthscale penalty."""
+    lengthscale_steps = tf.convert_to_tensor(
+        temporal_lengthscale_steps
+    )
+    zero = tf.zeros([], dtype=lengthscale_steps.dtype)
+    settings = (regularization or {}).get(
+        "temporal_log_lengthscale",
+        {},
+    )
+    if not bool(settings.get("enabled", False)):
+        return zero
+
+    lengthscale_years = lengthscale_steps * tf.cast(
+        step_years,
+        lengthscale_steps.dtype,
+    )
+    center_years = tf.cast(
+        settings["center_years"],
+        lengthscale_steps.dtype,
+    )
+    weight = tf.cast(
+        settings["weight"],
+        lengthscale_steps.dtype,
+    )
+    return weight * tf.square(
+        tf.math.log(lengthscale_years)
+        - tf.math.log(center_years)
+    )
+
+
+def _site_relative_change(
+    previous: DenseCviSites,
+    current: DenseCviSites,
+    *,
+    epsilon: float,
+) -> float:
+    numerator = tf.sqrt(
+        tf.reduce_sum(
+            tf.square(current.lambda1 - previous.lambda1)
+        )
+        + tf.reduce_sum(
+            tf.square(current.lambda2 - previous.lambda2)
+        )
+    )
+    denominator = tf.maximum(
+        tf.sqrt(
+            tf.reduce_sum(tf.square(previous.lambda1))
+            + tf.reduce_sum(tf.square(previous.lambda2))
+        ),
+        tf.cast(epsilon, previous.lambda1.dtype),
+    )
+    return float((numerator / denominator).numpy())
+
+
+def _evaluate_early_stopping_window(
+    records: list[dict[str, object]],
+    settings: dict[str, Any],
+) -> dict[str, object]:
+    checkpoint_interval = int(settings["checkpoint_interval"])
+    stability_window = int(settings["stability_window_iterations"])
+    window_intervals = stability_window // checkpoint_interval
+    window_observations = window_intervals + 1
+    result: dict[str, object] = {
+        "diagnostic_elbo_endpoint_relative_change": float("nan"),
+        "diagnostic_elbo_relative_range": float("nan"),
+        "spatial_lengthscale_x_relative_change_window": float("nan"),
+        "spatial_lengthscale_y_relative_change_window": float("nan"),
+        "kernel_variance_relative_change_window": float("nan"),
+        "temporal_lengthscale_relative_change_window": float("nan"),
+        "temporal_trend_absolute_change_window": float("nan"),
+        "early_stop_elbo_plateau_pass": False,
+        "early_stop_parameter_stability_pass": False,
+        "early_stop_site_stability_pass": False,
+        "early_stop_convergence_gate_pass": False,
+        "early_stop_eligible": False,
+        "window_observation_count": 0,
+        "site_interval_count": 0,
+        "site_relative_change_median_window": float("nan"),
+        "site_relative_change_maximum_window": float("nan"),
+    }
+    if len(records) < window_observations:
+        return result
+
+    window = records[-window_observations:]
+    completed = [int(record["completed_iterations"]) for record in window]
+    expected = list(
+        range(
+            completed[-1] - stability_window,
+            completed[-1] + checkpoint_interval,
+            checkpoint_interval,
+        )
+    )
+    site_changes = np.asarray(
+        [
+            float(record["site_relative_change_since_checkpoint"])
+            for record in window[1:]
+        ],
+        dtype=np.float64,
+    )
+    result["window_observation_count"] = len(window)
+    result["site_interval_count"] = len(site_changes)
+    eligible = bool(
+        completed == expected
+        and completed[-1] >= int(settings["min_iterations"])
+        and np.isfinite(site_changes).all()
+    )
+    result["early_stop_eligible"] = eligible
+    if not eligible:
+        return result
+
+    epsilon = float(settings["epsilon"])
+    first = window[0]
+    last = window[-1]
+    diagnostic = np.asarray(
+        [float(record["diagnostic_loss_fixed"]) for record in window],
+        dtype=np.float64,
+    )
+    endpoint_change = abs(diagnostic[-1] - diagnostic[0]) / max(
+        abs(diagnostic[0]), epsilon
+    )
+    relative_range = (diagnostic.max() - diagnostic.min()) / max(
+        abs(float(np.median(diagnostic))), epsilon
+    )
+
+    def relative_change(name: str) -> float:
+        first_value = float(first[name])
+        return abs(float(last[name]) - first_value) / max(
+            abs(first_value), epsilon
+        )
+
+    spatial_x_change = relative_change("spatial_lengthscale_x_km")
+    spatial_y_change = relative_change("spatial_lengthscale_y_km")
+    variance_change = relative_change("kernel_variance")
+    temporal_change = relative_change("temporal_lengthscale_steps")
+    trend_change = abs(
+        float(last["temporal_trend_coefficient"])
+        - float(first["temporal_trend_coefficient"])
+    )
+    site_median = float(np.median(site_changes))
+    site_maximum = float(np.max(site_changes))
+
+    diagnostic_thresholds = settings["diagnostic_elbo"]
+    parameter_thresholds = settings["parameter_stability"]
+    site_thresholds = settings["site_stability"]
+    elbo_pass = bool(
+        endpoint_change
+        <= float(diagnostic_thresholds["endpoint_relative_change_max"])
+        and relative_range
+        <= float(diagnostic_thresholds["relative_range_max"])
+    )
+    parameter_pass = bool(
+        spatial_x_change
+        <= float(
+            parameter_thresholds[
+                "spatial_lengthscale_relative_change_max"
+            ]
+        )
+        and spatial_y_change
+        <= float(
+            parameter_thresholds[
+                "spatial_lengthscale_relative_change_max"
+            ]
+        )
+        and variance_change
+        <= float(
+            parameter_thresholds[
+                "kernel_variance_relative_change_max"
+            ]
+        )
+        and temporal_change
+        <= float(
+            parameter_thresholds[
+                "temporal_lengthscale_relative_change_max"
+            ]
+        )
+        and trend_change
+        <= float(
+            parameter_thresholds[
+                "temporal_trend_absolute_change_max"
+            ]
+        )
+    )
+    site_pass = bool(
+        site_median
+        <= float(site_thresholds["median_relative_change_max"])
+        and site_maximum
+        <= float(site_thresholds["maximum_relative_change_max"])
+    )
+    result.update(
+        {
+            "diagnostic_elbo_endpoint_relative_change": endpoint_change,
+            "diagnostic_elbo_relative_range": relative_range,
+            "spatial_lengthscale_x_relative_change_window": spatial_x_change,
+            "spatial_lengthscale_y_relative_change_window": spatial_y_change,
+            "kernel_variance_relative_change_window": variance_change,
+            "temporal_lengthscale_relative_change_window": temporal_change,
+            "temporal_trend_absolute_change_window": trend_change,
+            "early_stop_elbo_plateau_pass": elbo_pass,
+            "early_stop_parameter_stability_pass": parameter_pass,
+            "early_stop_site_stability_pass": site_pass,
+            "early_stop_convergence_gate_pass": (
+                elbo_pass and parameter_pass and site_pass
+            ),
+            "site_relative_change_median_window": site_median,
+            "site_relative_change_maximum_window": site_maximum,
+        }
+    )
+    return result
+
+
+def _update_early_stopping_state(
+    *,
+    completed_iterations: int,
+    eligible: bool,
+    convergence_gate_pass: bool,
+    consecutive_passes: int,
+    settings: dict[str, Any],
+) -> tuple[int, str | None, bool]:
+    if eligible:
+        consecutive_passes = (
+            consecutive_passes + 1 if convergence_gate_pass else 0
+        )
+    else:
+        consecutive_passes = 0
+
+    if consecutive_passes >= int(settings["patience_checkpoints"]):
+        return consecutive_passes, "CONVERGENCE_RULE", True
+    if completed_iterations >= int(settings["max_iterations"]):
+        return consecutive_passes, "MAX_ITERATIONS", False
+    return consecutive_passes, None, False
+
+
 def train_model(
     *,
     model: STSVGPModel,
@@ -793,11 +1180,35 @@ def train_model(
     """Alternate CVI Natural Gradient and Adam hyperparameter steps."""
     training = config["training"]
     inference = config["inference"]
+    early_stopping = config.get("early_stopping", {})
+    early_stopping_enabled = bool(
+        early_stopping.get("enabled", False)
+    )
 
     rng = np.random.default_rng(
         int(training["random_state"])
         + int(seed_offset)
     )
+
+    diagnostic_batch_sets = []
+    n_train = sum(len(data.targets) for data in time_data)
+    if early_stopping_enabled:
+        diagnostic_rng = np.random.default_rng(
+            int(training["random_state"])
+            + int(early_stopping["diagnostic_seed_offset"])
+            + int(seed_offset)
+        )
+        diagnostic_batch_sets = [
+            sample_batches(
+                time_data,
+                total_batch_size=int(training["batch_size"]),
+                rng=diagnostic_rng,
+                dtype=dtype,
+            )
+            for _ in range(
+                int(early_stopping["fixed_diagnostic_batch_sets"])
+            )
+        ]
 
     sites = initialise_dense_sites(
         len(time_data),
@@ -826,14 +1237,24 @@ def train_model(
         dtype=dtype,
     )
 
-    history: list[dict[str, float]] = []
+    history: list[dict[str, object]] = []
     log_every = int(
         training["log_every"]
     )
+    initial_inducing_locations = tf.identity(
+        model.inducing_locations_km
+    )
 
     start = time.perf_counter()
+    training_iterations = (
+        int(early_stopping["max_iterations"])
+        if early_stopping_enabled
+        else int(iterations)
+    )
+    previous_site_snapshot: DenseCviSites | None = None
+    consecutive_passes = 0
 
-    for iteration in range(iterations):
+    for iteration in range(training_iterations):
         batches = sample_batches(
             time_data,
             total_batch_size=int(
@@ -869,7 +1290,33 @@ def train_model(
                     batches=batches,
                 )
             )
-            loss = -elbo
+            (
+                regularization_penalty,
+                lengthscale_penalty,
+                variance_penalty,
+            ) = spatial_kernel_regularization(
+                spatial_lengthscales_km=(
+                    model.spatial_lengthscales
+                ),
+                kernel_variance=model.variance,
+                regularization=config.get(
+                    "regularization"
+                ),
+            )
+            temporal_penalty = temporal_lengthscale_regularization(
+                model.temporal_lengthscale,
+                step_years=float(
+                    config["time"]["step_years"]
+                ),
+                regularization=config.get(
+                    "regularization"
+                ),
+            )
+            total_regularization_penalty = (
+                regularization_penalty
+                + temporal_penalty
+            )
+            loss = -elbo + total_regularization_penalty
 
         gradients = tape.gradient(
             loss,
@@ -918,12 +1365,70 @@ def train_model(
             )
         )
 
-        if (
-            iteration % log_every == 0
-            or iteration == iterations - 1
-        ):
+        completed_iterations = iteration + 1
+        early_stop_checkpoint = (
+            early_stopping_enabled
+            and completed_iterations
+            % int(early_stopping["checkpoint_interval"])
+            == 0
+        )
+        fixed_iteration_log = (
+            not early_stopping_enabled
+            and (
+                iteration % log_every == 0
+                or iteration == training_iterations - 1
+            )
+        )
+        if early_stop_checkpoint or fixed_iteration_log:
+            diagnostic_loss_fixed = float("nan")
+            site_relative_change = float("nan")
+            current_site_snapshot: DenseCviSites | None = None
+            if early_stopping_enabled:
+                diagnostic_losses = []
+                for diagnostic_batches in diagnostic_batch_sets:
+                    diagnostic_elbo, _ = model.stochastic_elbo(
+                        times=times,
+                        sites=sites,
+                        batches=diagnostic_batches,
+                    )
+                    diagnostic_losses.append(
+                        -float(diagnostic_elbo.numpy()) / n_train
+                    )
+                diagnostic_loss_fixed = float(
+                    np.mean(diagnostic_losses)
+                )
+                current_site_snapshot = DenseCviSites(
+                    lambda1=tf.identity(sites.lambda1),
+                    lambda2=tf.identity(sites.lambda2),
+                )
+                if previous_site_snapshot is not None:
+                    site_relative_change = _site_relative_change(
+                        previous_site_snapshot,
+                        current_site_snapshot,
+                        epsilon=float(early_stopping["epsilon"]),
+                    )
+
             precision = site_precision(
                 sites
+            )
+            inducing_displacements_m = (
+                tf.linalg.norm(
+                    model.inducing_locations_km
+                    - initial_inducing_locations,
+                    axis=1,
+                )
+                * tf.cast(1000.0, dtype)
+            )
+            pairwise_distances_m = (
+                tf.linalg.norm(
+                    model.inducing_locations_km[:, None, :]
+                    - model.inducing_locations_km[None, :, :],
+                    axis=2,
+                )
+                * tf.cast(1000.0, dtype)
+            )
+            off_diagonal = tf.logical_not(
+                tf.eye(model.n_spatial, dtype=tf.bool)
             )
             minimum_precision = float(
                 tf.reduce_min(
@@ -939,6 +1444,15 @@ def train_model(
                 ),
                 "elbo_stochastic": float(
                     elbo.numpy()
+                ),
+                "regularization_spatial_log_lengthscale": float(
+                    lengthscale_penalty.numpy()
+                ),
+                "regularization_kernel_log_variance": float(
+                    variance_penalty.numpy()
+                ),
+                "regularization_total": float(
+                    total_regularization_penalty.numpy()
                 ),
                 "natural_gradient_gamma": float(
                     applied_gamma
@@ -972,11 +1486,94 @@ def train_model(
                 "linear_intercept": float(
                     model.beta0.numpy()
                 ),
+                "inducing_mean_displacement_m": float(
+                    tf.reduce_mean(
+                        inducing_displacements_m
+                    ).numpy()
+                ),
+                "inducing_max_displacement_m": float(
+                    tf.reduce_max(
+                        inducing_displacements_m
+                    ).numpy()
+                ),
+                "inducing_min_pairwise_distance_m": float(
+                    tf.reduce_min(
+                        tf.boolean_mask(
+                            pairwise_distances_m,
+                            off_diagonal,
+                        )
+                    ).numpy()
+                ),
                 "elapsed_seconds": float(
                     time.perf_counter()
                     - start
                 ),
             }
+            temporal_settings = config.get(
+                "regularization",
+                {},
+            ).get(
+                "temporal_log_lengthscale",
+                {},
+            )
+            if bool(temporal_settings.get("enabled", False)):
+                record[
+                    "regularization_temporal_log_lengthscale"
+                ] = float(temporal_penalty.numpy())
+            if model.beta_time is not None:
+                record["temporal_trend_coefficient"] = float(
+                    model.beta_time.numpy()
+                )
+
+            stop_reason: str | None = None
+            if early_stopping_enabled:
+                record.update(
+                    {
+                        "completed_iterations": completed_iterations,
+                        "diagnostic_loss_fixed": diagnostic_loss_fixed,
+                        "site_relative_change_since_checkpoint": (
+                            site_relative_change
+                        ),
+                    }
+                )
+                window = _evaluate_early_stopping_window(
+                    [*history, record],
+                    early_stopping,
+                )
+                audit_fields = (
+                    "diagnostic_elbo_endpoint_relative_change",
+                    "diagnostic_elbo_relative_range",
+                    "spatial_lengthscale_x_relative_change_window",
+                    "spatial_lengthscale_y_relative_change_window",
+                    "kernel_variance_relative_change_window",
+                    "temporal_lengthscale_relative_change_window",
+                    "temporal_trend_absolute_change_window",
+                    "early_stop_elbo_plateau_pass",
+                    "early_stop_parameter_stability_pass",
+                    "early_stop_site_stability_pass",
+                    "early_stop_convergence_gate_pass",
+                    "early_stop_eligible",
+                )
+                record.update(
+                    {field: window[field] for field in audit_fields}
+                )
+                (
+                    consecutive_passes,
+                    stop_reason,
+                    _,
+                ) = _update_early_stopping_state(
+                    completed_iterations=completed_iterations,
+                    eligible=bool(window["early_stop_eligible"]),
+                    convergence_gate_pass=bool(
+                        window["early_stop_convergence_gate_pass"]
+                    ),
+                    consecutive_passes=consecutive_passes,
+                    settings=early_stopping,
+                )
+                record["early_stop_consecutive_passes"] = (
+                    consecutive_passes
+                )
+                previous_site_snapshot = current_site_snapshot
             history.append(record)
 
             print(
@@ -984,6 +1581,9 @@ def train_model(
                     record
                 )
             )
+
+            if stop_reason is not None:
+                break
 
     final_posterior = model.posterior(
         times=times,
@@ -1047,6 +1647,9 @@ def predict_frame(
                 features=tf.constant(
                     validation_data.features[start:end],
                     dtype=dtype,
+                ),
+                temporal_trend_time=(
+                    validation_data.temporal_trend_time
                 ),
                 coordinates_km=tf.constant(
                     validation_data.coordinates_km[start:end],
@@ -1146,6 +1749,7 @@ def run_fold(
     fold: dict[str, Any],
     config: dict[str, Any],
     dtype: tf.dtypes.DType,
+    fitted_state_callback: FoldStateCallback | None = None,
 ) -> tuple[
     dict[str, object],
     pd.DataFrame,
@@ -1214,6 +1818,22 @@ def run_fold(
         dtype=dtype,
         seed_offset=fold_number,
     )
+
+    early_stopping = config.get("early_stopping", {})
+    early_stopping_enabled = bool(
+        early_stopping.get("enabled", False)
+    )
+
+    if fitted_state_callback is not None:
+        fitted_state_callback(
+            FittedFoldState(
+                model=model,
+                sites=sites,
+                preprocessing=preprocessing,
+                train_origins=tuple(train_origins),
+                validation_origin=validation_origin,
+            )
+        )
 
     probability, latent_variance = predict_frame(
         model=model,
@@ -1315,6 +1935,26 @@ def run_fold(
             ).numpy()
         ),
     }
+
+    if early_stopping_enabled:
+        final_history = history.iloc[-1]
+        convergence_demonstrated = bool(
+            final_history["early_stop_consecutive_passes"]
+            >= int(early_stopping["patience_checkpoints"])
+        )
+        record.update(
+            {
+                "completed_iterations": int(
+                    final_history["completed_iterations"]
+                ),
+                "stop_reason": (
+                    "CONVERGENCE_RULE"
+                    if convergence_demonstrated
+                    else "MAX_ITERATIONS"
+                ),
+                "convergence_demonstrated": convergence_demonstrated,
+            }
+        )
 
     if annual_diagnostics:
         validation_target_years = (
@@ -1440,8 +2080,8 @@ def save_final_state(
             model.variance.numpy()
         ),
         inducing_locations_km=(
-            preprocessing
-            .inducing_locations_km
+            model.inducing_locations_km
+            .numpy()
         ),
         feature_mean=(
             preprocessing.feature_mean

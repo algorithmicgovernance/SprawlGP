@@ -1,0 +1,39 @@
+{
+  "horizon": "five_year_5y",
+  "label": "Five-year ST-SVGP",
+  "status": "PASS",
+  "rows": 436845,
+  "folds": [
+    1,
+    2,
+    3
+  ],
+  "forecast_origins": [
+    2005,
+    2010,
+    2015
+  ],
+  "target_years": [
+    2010,
+    2015,
+    2020
+  ],
+  "oof_columns": [
+    "cell_id",
+    "forecast_origin",
+    "target_year",
+    "target_transition_5y",
+    "probability_raw",
+    "fold"
+  ],
+  "join_keys": [
+    "cell_id",
+    "forecast_origin"
+  ],
+  "model_config": "configs/modeling/st_svgp.yaml",
+  "predictions_path": "reports/modeling/st_svgp/predictions/st_svgp_oof_predictions.parquet",
+  "dataset_path": "data/final/yaounde_urban_expansion_30m_v2/cell_time_dataset.parquet",
+  "latent_variance_available": false,
+  "locked_rows_used": 0,
+  "model_state_directory_exists": false
+}
