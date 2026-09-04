@@ -1,0 +1,14 @@
+{
+  "annual_orchestration_sha256": "3acba829c3e26aed616c974ea51c5dfffab6fa79daf50eae14f1a616284ecfcc",
+  "mapping_method": "ndbi",
+  "mapping_validation_status": "PROVISIONAL_ANNUAL_PROTOCOL",
+  "pipeline_stage": "annual_dataset_products",
+  "pipeline_version": 1,
+  "release_status": "PROVISIONAL_PENDING_ANNUAL_MANUAL_VALIDATION",
+  "stable_signature": "20248fa91db3350ebf13ae60d2751534b6ce732459528f5102419f46e3e380ef",
+  "state_count": 26,
+  "state_manifest_sha256": "c5660face6452769925aa00b610a457e9f83416bf1d3076897b9fb294b40e297",
+  "state_summary_sha256": "a6ce7ead84016f553e0ab617e5ac5f3553adab04e92e454174e23a7ba765a973",
+  "transition_asset_count": 0,
+  "transition_count": 25
+}

@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "six_state_sanity": "PASS",
+  "locked_rows_used": 0,
+  "horizons": {
+    "annual_1y": {
+      "runtime_seconds": 20.160323624964803,
+      "contexts": 6,
+      "background_rows": 40,
+      "explained_rows": 60,
+      "nsamples": 128,
+      "mean_absolute_additivity_error": 9.98044239845323e-17,
+      "maximum_absolute_additivity_error": 3.3306690738754696e-16
+    },
+    "five_year_5y": {
+      "runtime_seconds": 25.07716904208064,
+      "contexts": 6,
+      "background_rows": 40,
+      "explained_rows": 60,
+      "nsamples": 128,
+      "mean_absolute_additivity_error": 1.211993468549129e-16,
+      "maximum_absolute_additivity_error": 3.3306690738754696e-16
+    }
+  }
+}

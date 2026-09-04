@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "gate": "A",
+  "source_config_hashes": {
+    "annual_1y": "e2e4df0ccbe93a295964ff5223e722e7b2f15dd57ad26bb415404e9ab84d1efd",
+    "five_year_5y": "aee54552739c73d48578bc3e6812ac48e4c260b076e14f96d8ab5b88e07670f0"
+  },
+  "retained_oof_hashes": {
+    "annual_1y": "1e96f1495ba756a6cc83c716cdeac220ee4252b3309a3bf105942e1fe2a28aa3",
+    "five_year_5y": "e21a1c4254114834086abac42b19c53c138fd9613c61905b0b035f760da150d0"
+  },
+  "runtime": {
+    "python": "3.11.5 (main, Sep 11 2023, 08:31:25) [Clang 14.0.6 ]",
+    "platform": "macOS-14.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "3.0.3",
+      "scikit-learn": "1.9.0",
+      "tensorflow": "2.18.1"
+    }
+  },
+  "folds": [
+    {
+      "horizon": "annual_1y",
+      "fold": 1,
+      "source_config_path": "configs/modeling/st_svgp_annual/convergence_3000.yaml",
+      "source_config_sha256": "e2e4df0ccbe93a295964ff5223e722e7b2f15dd57ad26bb415404e9ab84d1efd",
+      "retained_oof_path": "reports/modeling/st_svgp_annual/experiments/convergence_3000/predictions/st_svgp_oof_predictions.parquet",
+      "retained_oof_sha256": "1e96f1495ba756a6cc83c716cdeac220ee4252b3309a3bf105942e1fe2a28aa3",
+      "iterations": 3000,
+      "seed": 20260809,
+      "persisted_state_path": "artifacts/models/day5_reconstructed/annual_1y/fold_1/st_svgp_state.npz",
+      "locked_rows_used": 0,
+      "reproduction_status": "PASS",
+      "rows": 100628,
+      "max_absolute_probability_difference": 4.107825191113079e-15,
+      "mean_absolute_probability_difference": 7.002969842336772e-16,
+      "RMSE_probability_difference": 8.771345664251237e-16,
+      "PR_AUC_original": 0.15039482211932959,
+      "PR_AUC_reconstructed": 0.15039482211932959,
+      "ROC_AUC_original": 0.8944957760532594,
+      "ROC_AUC_reconstructed": 0.8944957760532594,
+      "LogLoss_original": 0.28203615076371663,
+      "LogLoss_reconstructed": 0.2820361507637173,
+      "rtol": 1e-06,
+      "atol": 1e-08
+    },
+    {
+      "horizon": "five_year_5y",
+      "fold": 1,
+      "source_config_path": "configs/modeling/st_svgp.yaml",
+      "source_config_sha256": "aee54552739c73d48578bc3e6812ac48e4c260b076e14f96d8ab5b88e07670f0",
+      "retained_oof_path": "reports/modeling/st_svgp/predictions/st_svgp_oof_predictions.parquet",
+      "retained_oof_sha256": "e21a1c4254114834086abac42b19c53c138fd9613c61905b0b035f760da150d0",
+      "iterations": 1000,
+      "seed": 20260809,
+      "persisted_state_path": "artifacts/models/day5_reconstructed/five_year_5y/fold_1/st_svgp_state.npz",
+      "locked_rows_used": 0,
+      "reproduction_status": "PASS",
+      "rows": 168945,
+      "max_absolute_probability_difference": 4.9960036108132044e-15,
+      "mean_absolute_probability_difference": 3.8079397314492347e-16,
+      "RMSE_probability_difference": 5.713644738569406e-16,
+      "PR_AUC_original": 0.6126076379700827,
+      "PR_AUC_reconstructed": 0.6126076379700827,
+      "ROC_AUC_original": 0.8715031463645344,
+      "ROC_AUC_reconstructed": 0.8715031463645344,
+      "LogLoss_original": 0.34566334330069926,
+      "LogLoss_reconstructed": 0.3456633433006993,
+      "rtol": 1e-06,
+      "atol": 1e-08
+    }
+  ],
+  "locked_rows_used": 0,
+  "scientific_confirmation": "No hyperparameter was changed, no model was selected using reconstructed predictions, no final fit was run, and no locked test row was used."
+}

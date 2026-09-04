@@ -107,3 +107,17 @@ reports/exploration_v*/
 artifacts/
 data/archive/
 scripts/SprawlGP_local_helpers/
+data/final/yaounde_urban_expansion_30m_annual_v1/
+reports/modeling/**/predictions/*.parquet
+data/validation/validation_dataset.parquet
+
+
+# ST-SVGP generated row-level/model-state artifacts
+reports/modeling/**/*_oof_predictions.parquet
+reports/modeling/**/oof_row_diagnostics.parquet
+reports/modeling/st_svgp_explainability/**/shap_values.parquet
+reports/modeling/st_svgp_improvements/**/metrics/st_svgp_training_history.csv
+artifacts/models/day5_reconstructed/
+
+# Rejected CAL-EARLY-A01 local evidence (not part of retained implementation)
+reports/modeling/st_svgp_improvements/annual/calibration/early_stop_temporal_probability_calibration/

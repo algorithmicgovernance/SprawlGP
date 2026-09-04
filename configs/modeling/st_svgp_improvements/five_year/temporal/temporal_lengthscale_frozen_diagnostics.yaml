@@ -1,0 +1,17 @@
+smoothing_window_rows: 5
+tail_window_rows: 5
+
+histories:
+  - experiment_id: five_year_canonical
+    horizon: five_year_5y
+    path: reports/modeling/st_svgp/metrics/st_svgp_training_history.csv
+    step_years: 5
+    gradient_clip_norm: 10.0
+
+  - experiment_id: TEMP-F01_temporal_lengthscale_frozen
+    horizon: five_year_5y
+    path: reports/modeling/st_svgp_improvements/five_year/temporal/temporal_lengthscale_frozen/metrics/st_svgp_training_history.csv
+    step_years: 5
+    gradient_clip_norm: 10.0
+
+output_dir: reports/modeling/st_svgp_improvements/five_year/temporal/temporal_lengthscale_frozen/diagnostics

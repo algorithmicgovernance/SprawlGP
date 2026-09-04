@@ -1,0 +1,23 @@
+smoothing_window_rows: 5
+tail_window_rows: 5
+
+histories:
+  - experiment_id: annual_1500
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_annual/experiments/convergence_1500/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+
+  - experiment_id: SPA-A01_spatial_init_0p5km
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_improvements/annual/spatial/spatial_init_0p5km/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+
+  - experiment_id: SPA-A02_joint_spatial_regularization
+    horizon: annual_1y
+    path: reports/modeling/st_svgp_improvements/annual/spatial/joint_spatial_regularization/metrics/st_svgp_training_history.csv
+    step_years: 1
+    gradient_clip_norm: 10.0
+
+output_dir: reports/modeling/st_svgp_improvements/annual/spatial/joint_spatial_regularization/diagnostics

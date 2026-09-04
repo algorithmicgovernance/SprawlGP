@@ -14,7 +14,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-
 BASE_PREDICTORS = (
     "ndbi_t",
     "savi_t",
@@ -84,7 +83,11 @@ INTERACTION_PREDICTORS = (
 )
 
 
-def add_candidate_features(frame: pd.DataFrame) -> pd.DataFrame:
+def add_candidate_features(
+    frame: pd.DataFrame,
+    *,
+    recent_growth_column: str = "recent_local_growth_5y_t",
+) -> pd.DataFrame:
     """Add non-linear and interaction candidates without new data sources.
 
     Added variables
@@ -118,7 +121,7 @@ def add_candidate_features(frame: pd.DataFrame) -> pd.DataFrame:
         "distance_to_built_m_t",
         "slope_degrees",
         "built_fraction_11x11_t",
-        "recent_local_growth_5y_t",
+        recent_growth_column,
     }
     missing = sorted(required.difference(result.columns))
     if missing:
@@ -160,7 +163,7 @@ def add_candidate_features(frame: pd.DataFrame) -> pd.DataFrame:
         errors="raise",
     ).astype(float)
     recent_growth = pd.to_numeric(
-        result["recent_local_growth_5y_t"],
+        result[recent_growth_column],
         errors="raise",
     ).astype(float)
 

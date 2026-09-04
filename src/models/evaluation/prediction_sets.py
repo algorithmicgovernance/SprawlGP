@@ -64,20 +64,35 @@ def build_prediction_sets(
     q_hat: float,
 ) -> pd.DataFrame:
     """Build binary prediction sets Gamma(x)={y in {0,1}: s(x,y)<=q_hat}."""
+    if not np.isfinite(float(q_hat)):
+        raise ValueError("q_hat must be finite.")
+    return _build_prediction_sets(
+        probability=probability,
+        q_hat_0=q_hat,
+        q_hat_1=q_hat,
+    )
+
+
+def _build_prediction_sets(
+    probability: np.ndarray,
+    q_hat_0: float,
+    q_hat_1: float,
+) -> pd.DataFrame:
+    """Build binary prediction sets with one threshold per candidate label."""
     p = np.asarray(probability, dtype=float).reshape(-1)
     if not np.isfinite(p).all():
         raise ValueError("Probabilities contain NaN or Inf.")
     if np.any((p < 0.0) | (p > 1.0)):
         raise ValueError("Probabilities must lie in [0, 1].")
-    if not np.isfinite(float(q_hat)):
-        raise ValueError("q_hat must be finite.")
+    if not np.isfinite(float(q_hat_0)) or not np.isfinite(float(q_hat_1)):
+        raise ValueError("Prediction-set thresholds must be finite.")
 
-    include_0 = p <= q_hat
-    include_1 = (1.0 - p) <= q_hat
+    include_0 = p <= q_hat_0
+    include_1 = (1.0 - p) <= q_hat_1
 
     labels = []
     size = include_0.astype(int) + include_1.astype(int)
-    for has_0, has_1 in zip(include_0, include_1):
+    for has_0, has_1 in zip(include_0, include_1, strict=True):
         if has_0 and has_1:
             labels.append("{0,1}")
         elif has_0:
@@ -97,18 +112,30 @@ def build_prediction_sets(
     )
 
 
-def prediction_set_metrics(
-    y_true: np.ndarray,
+def build_mondrian_prediction_sets(
     probability: np.ndarray,
-    q_hat: float,
+    q_hat_0: float,
+    q_hat_1: float,
+) -> pd.DataFrame:
+    """Build class-conditional binary prediction sets."""
+    return _build_prediction_sets(
+        probability=probability,
+        q_hat_0=q_hat_0,
+        q_hat_1=q_hat_1,
+    )
+
+
+def _prediction_set_metrics(
+    y: np.ndarray,
+    sets: pd.DataFrame,
     target_coverage: float,
 ) -> dict[str, float]:
-    """Summarize empirical coverage and set efficiency diagnostics."""
-    y, p = _as_binary_arrays(y_true, probability)
-    sets = build_prediction_sets(p, q_hat)
-
-    covered = np.where(y == 1, sets["include_1"].to_numpy(), sets["include_0"].to_numpy())
-    covered = covered.astype(float)
+    """Summarize coverage and efficiency for constructed prediction sets."""
+    covered = np.where(
+        y == 1,
+        sets["include_1"].to_numpy(),
+        sets["include_0"].to_numpy(),
+    ).astype(float)
 
     empirical = float(covered.mean()) if len(covered) else float("nan")
     gap = empirical - float(target_coverage)
@@ -116,12 +143,19 @@ def prediction_set_metrics(
     positive_mask = y == 1
     negative_mask = y == 0
 
-    positive_cov = float(sets.loc[positive_mask, "include_1"].mean()) if positive_mask.any() else float("nan")
-    negative_cov = float(sets.loc[negative_mask, "include_0"].mean()) if negative_mask.any() else float("nan")
+    positive_cov = (
+        float(sets.loc[positive_mask, "include_1"].mean())
+        if positive_mask.any()
+        else float("nan")
+    )
+    negative_cov = (
+        float(sets.loc[negative_mask, "include_0"].mean())
+        if negative_mask.any()
+        else float("nan")
+    )
 
     set_size = sets["set_size"].to_numpy(dtype=float)
     return {
-        "q_hat": float(q_hat),
         "target_coverage": float(target_coverage),
         "empirical_coverage": empirical,
         "coverage_gap": gap,
@@ -132,6 +166,38 @@ def prediction_set_metrics(
         "empty_set_rate": float(np.mean(set_size == 0.0)),
         "positive_class_coverage": positive_cov,
         "negative_class_coverage": negative_cov,
+    }
+
+
+def prediction_set_metrics(
+    y_true: np.ndarray,
+    probability: np.ndarray,
+    q_hat: float,
+    target_coverage: float,
+) -> dict[str, float]:
+    """Summarize empirical coverage and set efficiency diagnostics."""
+    y, p = _as_binary_arrays(y_true, probability)
+    sets = build_prediction_sets(p, q_hat)
+    return {
+        "q_hat": float(q_hat),
+        **_prediction_set_metrics(y, sets, target_coverage),
+    }
+
+
+def mondrian_prediction_set_metrics(
+    y_true: np.ndarray,
+    probability: np.ndarray,
+    q_hat_0: float,
+    q_hat_1: float,
+    target_coverage: float,
+) -> dict[str, float]:
+    """Summarize class-conditional coverage and set efficiency diagnostics."""
+    y, p = _as_binary_arrays(y_true, probability)
+    sets = build_mondrian_prediction_sets(p, q_hat_0, q_hat_1)
+    return {
+        "q_hat_0": float(q_hat_0),
+        "q_hat_1": float(q_hat_1),
+        **_prediction_set_metrics(y, sets, target_coverage),
     }
 
 
@@ -189,6 +255,71 @@ def temporal_prediction_set_coverage(
             {
                 "fold": int(fold),
                 "calibration_rows": int(len(calibration)),
+                "evaluation_rows": int(len(evaluation)),
+                **metrics,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def temporal_mondrian_prediction_set_coverage(
+    frame: pd.DataFrame,
+    target_column: str,
+    probability_column: str,
+    fold_column: str = "fold",
+    target_coverage: float = 0.80,
+) -> pd.DataFrame:
+    """Evaluate temporal Mondrian coverage with past-fold calibration only."""
+    required = {target_column, probability_column, fold_column}
+    missing = sorted(required.difference(frame.columns))
+    if missing:
+        raise ValueError(
+            "Missing columns required for temporal Mondrian coverage: "
+            + ", ".join(missing)
+        )
+
+    alpha = 1.0 - float(target_coverage)
+    if not (0.0 < alpha < 1.0):
+        raise ValueError("target_coverage must be in (0, 1).")
+
+    table = frame.loc[:, [target_column, probability_column, fold_column]].copy()
+    table[fold_column] = pd.to_numeric(table[fold_column], errors="raise").astype(int)
+
+    rows: list[dict[str, float | int]] = []
+    for fold in sorted(table[fold_column].unique()):
+        evaluation = table.loc[table[fold_column] == fold]
+        calibration = table.loc[table[fold_column] < fold]
+        if calibration.empty:
+            continue
+
+        calibration_y, calibration_p = _as_binary_arrays(
+            calibration[target_column].to_numpy(dtype=int),
+            calibration[probability_column].to_numpy(dtype=float),
+        )
+        calibration_scores = nonconformity_scores(calibration_y, calibration_p)
+        negative_scores = calibration_scores[calibration_y == 0]
+        positive_scores = calibration_scores[calibration_y == 1]
+        if negative_scores.size == 0 or positive_scores.size == 0:
+            raise ValueError(
+                f"Fold {fold} requires past calibration rows from both classes."
+            )
+
+        q_hat_0 = conformal_quantile(negative_scores, alpha=alpha)
+        q_hat_1 = conformal_quantile(positive_scores, alpha=alpha)
+        metrics = mondrian_prediction_set_metrics(
+            evaluation[target_column].to_numpy(dtype=int),
+            evaluation[probability_column].to_numpy(dtype=float),
+            q_hat_0=q_hat_0,
+            q_hat_1=q_hat_1,
+            target_coverage=target_coverage,
+        )
+        rows.append(
+            {
+                "fold": int(fold),
+                "calibration_rows": int(len(calibration)),
+                "calibration_positive_rows": int(positive_scores.size),
+                "calibration_negative_rows": int(negative_scores.size),
                 "evaluation_rows": int(len(evaluation)),
                 **metrics,
             }

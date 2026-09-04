@@ -1,0 +1,9 @@
+{
+  "catalog_version": 1,
+  "config_sha256": "0c6b17ecb90cee4fb21fd6296d9f93676f73a81b946c33f12ec6f172855308de",
+  "selected_scene_manifest_sha256": "dae5955be56d4eefd10bec27e1d3667da368e0865fa2643cb44aab051631481b",
+  "compositing_protocol_sha256": "24ebf84b07aeab99046802ab980a89c7d4eb8d0904b94262b8ee89cb912c05c5",
+  "selected_scene_count": 486,
+  "requested_year_count": 26,
+  "selection_scope": "per_year"
+}

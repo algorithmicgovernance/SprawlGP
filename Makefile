@@ -1,3 +1,5 @@
+PYTHON ?= python
+
 # =============================================================================
 #  Administrative boundaries and study grid
 # =============================================================================
@@ -55,6 +57,129 @@ test-landsat: ## Run the pytest suite for the Landsat catalog module with verbos
 	pytest tests/test_landsat_catalog.py -v
 
 day2: landsat-catalog landsat-visuals test-landsat ## Execute the complete Day 2 pipeline: build the Landsat catalog, generate visualizations, and run tests
+
+# =============================================================================
+#  Annual Landsat observations (2000-2025)
+# =============================================================================
+
+.PHONY: \
+	annual-catalog \
+	annual-orchestration-preflight \
+	annual-orchestration-submit \
+	annual-orchestration-status \
+	annual-orchestration-finalize \
+	annual-dataset-preflight \
+	annual-products-submit \
+	annual-products-status \
+	annual-products-finalize \
+	annual-audit \
+	annual-build-tables \
+	annual-tables-status \
+	annual-tables-assemble \
+	annual-diagnostic-preflight \
+	annual-diagnostic-sample \
+	annual-diagnostic-expand-sample \
+	annual-diagnostic-evaluate \
+	test-annual-dataset \
+	test-annual-diagnostic \
+	test-annual
+
+annual-catalog: ## Build the isolated 2000-2025 calendar-year Landsat catalogue
+	python -m src.analysis.landsat.build_annual_catalog \
+		--config configs/annual/landsat_catalog_annual.yaml
+
+annual-orchestration-preflight: ## Validate annual grid and catalogue dependencies without submitting exports
+	python -m src.analysis.orchestration.preflight \
+		--config configs/annual/orchestrate_sources_annual.yaml
+
+annual-orchestration-submit: ## Submit annual median composites and valid-count assets only
+	python -m src.analysis.landsat.build_composites \
+		--config configs/annual/orchestrate_sources_annual.yaml \
+		--submit
+
+annual-orchestration-status: ## Check annual Landsat Earth Engine task status
+	python -m src.analysis.orchestration.finalize \
+		--config configs/annual/orchestrate_sources_annual.yaml \
+		--status-only
+
+annual-orchestration-finalize: ## Validate completed annual Landsat assets and write metadata
+	python -m src.analysis.orchestration.finalize \
+		--config configs/annual/orchestrate_sources_annual.yaml
+
+annual-dataset-preflight: ## Validate annual Day 3 inputs and isolation without submitting tasks
+	python -m src.analysis.annual_dataset.build_products \
+		--config configs/annual/annual_dataset.yaml \
+		--preflight-only
+
+annual-products-submit: ## Submit 26 compact annual index and state products
+	python -m src.analysis.annual_dataset.build_products \
+		--config configs/annual/annual_dataset.yaml \
+		--submit
+
+annual-products-status: ## Check annual state-product Earth Engine task status
+	python -m src.analysis.annual_dataset.finalize \
+		--config configs/annual/annual_dataset.yaml \
+		--status-only
+
+annual-products-finalize: ## Validate annual state assets and write state summaries
+	python -m src.analysis.annual_dataset.finalize \
+		--config configs/annual/annual_dataset.yaml
+
+annual-audit: ## Build annual transition diagnostics and anomaly evidence outputs
+	python -m src.analysis.annual_dataset.audit \
+		--config configs/annual/annual_dataset.yaml
+
+annual-build-tables: ## Submit 25 annual eligible-cell table exports
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--submit
+
+annual-tables-status: ## Check annual table-export Earth Engine task status
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--status-only
+
+annual-tables-assemble: ## Assemble downloaded annual table exports into Parquet
+	python -m src.analysis.annual_dataset.build_tables \
+		--config configs/annual/annual_dataset.yaml \
+		--assemble
+
+annual-diagnostic-preflight: ## Validate annual diagnostic inputs without mutation
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--preflight
+
+annual-diagnostic-sample: ## Generate the annual diagnostic sample and blind review files
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--sample
+
+annual-diagnostic-expand-sample: ## Generate one evidence-driven reserve expansion file
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--expand
+
+annual-diagnostic-evaluate: ## Evaluate independently reviewed annual diagnostic labels
+	$(PYTHON) -m src.analysis.annual_dataset.diagnostic_validation \
+		--config configs/annual/annual_diagnostic.yaml \
+		--evaluate
+
+test-annual-dataset: ## Run isolated annual Day 3 tests
+	python -m pytest \
+		tests/test_annual_catalog.py \
+		tests/test_annual_asset_isolation.py \
+		tests/test_annual_dataset.py \
+		-v
+
+test-annual-diagnostic: ## Run the isolated annual diagnostic tests
+	$(PYTHON) -m pytest tests/test_annual_diagnostic.py -v
+
+test-annual: ## Run all annual catalogue, isolation and Day 3 dataset tests
+	pytest \
+		tests/test_annual_catalog.py \
+		tests/test_annual_asset_isolation.py \
+		tests/test_annual_dataset.py \
+		-v
 
 # =============================================================================
 #  — Orchestration (Landsat composites, terrain, OSM)
@@ -372,6 +497,8 @@ modeling-logistic-v1:  ## Reproduce the retained initial Logistic Regression exp
 	modeling-svgp-preflight \
 	modeling-svgp \
 	modeling-probability-evaluation \
+	modeling-probability-evaluation-annual \
+	modeling-probability-evaluation-annual-mondrian \
 	modeling-svgp-feature \
 	modeling-svgp-feature-summary \
 	modeling-svgp-tune \
@@ -393,6 +520,12 @@ modeling-svgp:
 
 modeling-probability-evaluation:
 	python -m src.models.evaluation.evaluate_probabilities
+
+modeling-probability-evaluation-annual:
+	python -m src.models.evaluation.evaluate_probabilities --annual
+
+modeling-probability-evaluation-annual-mondrian:
+	python -m src.models.evaluation.evaluate_probabilities --annual-mondrian
 
 # Usage:
 # make modeling-svgp-feature FEATURE_SET=log_distance
@@ -429,15 +562,39 @@ modeling-svgp-natgrad-v1:
 # initialised at 1.5 five-year steps.
 PYTHON ?= python
 ST_SVGP_CONFIG := configs/modeling/st_svgp.yaml
+ST_SVGP_ANNUAL_CONFIG := configs/modeling/st_svgp_annual.yaml
+ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG := configs/modeling/st_svgp_annual/convergence_1500.yaml
+ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG := configs/modeling/st_svgp_annual/convergence_3000.yaml
 ST_SVGP_FIXED_1P5_CONFIG := configs/modeling/st_svgp/temporal_lengthscale_fixed_1p5.yaml
 ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
+ST_SVGP_DAY5_CONFIG := configs/modeling/day5_st_svgp_diagnostics.yaml
+
+ST_SVGP_TREN_A01_CONFIG := configs/modeling/st_svgp_improvements/annual/temporal/time_trend.yaml
+ST_SVGP_PRIMARY_CONFIG := configs/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping.yaml
+ST_SVGP_EARLY_CLIP_100K_CONFIG := configs/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping_clip_100k.yaml
 
 .PHONY: st-svgp-tests st-svgp-test-temporal-kernel st-svgp-test-filter-smoother \
 	st-svgp-test-cvi st-svgp-test-model st-svgp-validate-temporal-kernel \
 	st-svgp-validate-filter-smoother st-svgp-validate-cvi \
 	st-svgp-pretraining-validation st-svgp-preflight st-svgp-rolling \
 	st-svgp-final-fit st-svgp-fixed-1p5-rolling st-svgp-compare-oof \
-	st-svgp-candidate-check
+	st-svgp-candidate-check st-svgp-annual-preflight \
+	st-svgp-annual-rolling st-svgp-annual-final-fit \
+	st-svgp-annual-convergence-1500-preflight \
+	st-svgp-annual-convergence-1500 \
+	st-svgp-annual-convergence-3000-preflight \
+	st-svgp-annual-convergence-3000 \
+	st-svgp-annual-convergence-3000-evaluate \
+	st-svgp-annual-3000-calibration \
+	day5-st-svgp-preflight day5-st-svgp-oof-diagnostics \
+	day5-st-svgp-shap-preflight day5-st-svgp-shap-pilot \
+	day5-st-svgp-reconstruction-preflight \
+	day5-st-svgp-reconstruct-gate-a \
+	st-svgp-reconstruct-remaining-folds st-svgp-shap \
+	st-svgp-early-clip-100k-preflight \
+	st-svgp-early-clip-100k \
+	st-svgp-tren-a01-preflight st-svgp-tren-a01 \
+	st-svgp-primary-preflight st-svgp-primary
 
 # [01/37] Matérn-3/2 state-space covariance equals direct kernel: ell=0.5, variance=0.3.
 # [02/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.0, variance=1.0.
@@ -526,17 +683,116 @@ st-svgp-preflight:
 		--config $(ST_SVGP_CONFIG) \
 		--preflight-only
 
+# Validate the provisional annual config and dataset contract without fitting.
+st-svgp-annual-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG) \
+		--preflight-only
+
+# Validate the isolated 1500-iteration convergence config without fitting.
+st-svgp-annual-convergence-1500-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG) \
+		--preflight-only
+
+# Validate exact 3000-budget parity and the annual data contract without fitting.
+st-svgp-annual-convergence-3000-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence_3000 \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--preflight-only
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--preflight-only
+
 # Reproduce the promoted free-init-1.5 candidate on the three pre-2020 rolling folds.
 st-svgp-rolling:
 	$(PYTHON) -m src.models.train_st_svgp \
 		--config $(ST_SVGP_CONFIG) \
 		--rolling-only
 
+# Run only the three strict pre-2020 annual development folds.
+st-svgp-annual-rolling:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG) \
+		--rolling-only
+
+# Run only the same three pre-2020 folds, then compare isolated artifacts.
+st-svgp-annual-convergence-1500:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG) \
+		--rolling-only
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_1500_CONFIG)
+
+# Run only the final planned iteration-budget extension from a fresh initialization.
+st-svgp-annual-convergence-3000:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG) \
+		--rolling-only
+
+# Evaluate the completed 3000 OOF run without modifying retained budget artifacts.
+st-svgp-annual-convergence-3000-evaluate:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_convergence_3000 \
+		--config $(ST_SVGP_ANNUAL_CONVERGENCE_3000_CONFIG)
+
+# Calibrate the existing 3000-iteration OOF probabilities without model training.
+st-svgp-annual-3000-calibration:
+	$(PYTHON) -m src.models.evaluation.st_svgp_annual_temporal_calibration
+
+# Validate both retained OOF/data contracts, temporal locks, and state-directory availability.
+day5-st-svgp-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_diagnostics \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--preflight-only
+
+# Generate OOF failure diagnostics for both horizons without fitting a model.
+day5-st-svgp-oof-diagnostics:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_diagnostics \
+		--config $(ST_SVGP_DAY5_CONFIG)
+
+# Validate frozen reconstruction inputs, hashes, folds, and locks without training.
+day5-st-svgp-reconstruction-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--preflight-only
+
+# Reconstruct only annual Fold 1 and five-year Fold 1, with fail-stop comparison.
+day5-st-svgp-reconstruct-gate-a:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--gate-a
+
+# Reconstruct only the four authorized rolling Folds 2 and 3, then consolidate.
+st-svgp-reconstruct-remaining-folds:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_reconstruction \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--remaining-folds
+
+# Require real rolling states and exact retained-OOF reproduction before SHAP.
+day5-st-svgp-shap-preflight:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_shap \
+		--config $(ST_SVGP_DAY5_CONFIG)
+
+# Run only the bounded KernelExplainer pilot after the reload gate passes.
+day5-st-svgp-shap-pilot:
+	$(PYTHON) -m src.models.evaluation.st_svgp_day5_shap \
+		--config $(ST_SVGP_DAY5_CONFIG) \
+		--pilot
+
+# Run the single final context-conditioned SHAP analysis from verified states.
+st-svgp-shap:
+	$(PYTHON) -m src.models.evaluation.st_svgp_explainability
+
 # Fit the promoted candidate on all pre-test origins (2000-2015).
 # The canonical config still keeps 2020 locked and does not evaluate it.
 st-svgp-final-fit:
 	$(PYTHON) -m src.models.train_st_svgp \
 		--config $(ST_SVGP_CONFIG)
+
+# Fit annual origins 2000-2018 without evaluating the locked 2020-2025 block.
+st-svgp-annual-final-fit:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_ANNUAL_CONFIG)
 
 # Reproduce the retained diagnostic in which ell_t is fixed exactly at 1.5.
 st-svgp-fixed-1p5-rolling:
@@ -553,3 +809,41 @@ st-svgp-compare-oof:
 st-svgp-candidate-check: st-svgp-pretraining-validation st-svgp-preflight \
 	st-svgp-rolling st-svgp-compare-oof
 # END ST-SVGP WORKFLOW
+
+# Validate EARLY-CLIP-A01 without training.
+# Exact EARLY-STOP-A01 sensitivity experiment with only clip 10 -> 100000.
+st-svgp-early-clip-100k-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_EARLY_CLIP_100K_CONFIG) \
+		--preflight-only
+
+
+# Run EARLY-CLIP-A01 on the same three strict pre-2020 rolling folds.
+# The only scientific change relative to EARLY-STOP-A01 is
+# gradient_clip_norm: 10.0 -> 100000.0.
+st-svgp-early-clip-100k:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_EARLY_CLIP_100K_CONFIG) \
+		--rolling-only
+
+st-svgp-tren-a01-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_TREN_A01_CONFIG) \
+		--preflight-only
+
+st-svgp-tren-a01:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_TREN_A01_CONFIG) \
+		--rolling-only
+
+# PRIMARY annual development model: EARLY-STOP-A01.
+# Development-only: do not run a final/locked evaluation here.
+st-svgp-primary-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \\
+		--config $(ST_SVGP_PRIMARY_CONFIG) \
+		--preflight-only
+
+st-svgp-primary:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_PRIMARY_CONFIG) \
+		--rolling-only

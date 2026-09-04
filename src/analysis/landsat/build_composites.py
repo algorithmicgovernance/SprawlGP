@@ -15,7 +15,7 @@ from typing import Any
 
 import ee
 import pandas as pd
-
+from src.analysis.landsat.qa_masks import landsat_valid_mask
 from src.analysis.orchestration.common import (
     asset_exists,
     ensure_asset_folder,
@@ -31,8 +31,6 @@ from src.analysis.orchestration.common import (
     write_yaml,
 )
 from src.analysis.orchestration.preflight import asset_id_column, run_preflight
-from src.analysis.landsat.qa_masks import landsat_valid_mask
-
 
 LANDSAT_BANDS = {
     "LT05": {
@@ -337,6 +335,7 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
     preflight = run_preflight(config_path)
     project_root = find_project_root(config_path.parent)
     config = load_yaml(config_path)
+    landsat_only = bool(config.get("orchestration", {}).get("landsat_only", False))
     day2_config = load_yaml(
         resolve_project_path(config["inputs"]["landsat_catalog_config"], project_root)
     )
@@ -354,12 +353,15 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
 
     asset_root = config["exports"]["asset_root"].rstrip("/")
     landsat_folder = f"{asset_root}/{config['exports']['landsat_folder']}"
-    terrain_folder = f"{asset_root}/{config['exports']['terrain_folder']}"
     ensure_asset_folder(asset_root)
     ensure_asset_folder(landsat_folder)
-    ensure_asset_folder(terrain_folder)
+
+    if not landsat_only:
+        terrain_folder = f"{asset_root}/{config['exports']['terrain_folder']}"
+        ensure_asset_folder(terrain_folder)
 
     tasks: list[dict[str, Any]] = []
+    task_prefix = str(config["exports"].get("task_prefix", "sprawlgp"))
 
     for epoch in config["landsat"]["epochs"]:
         epoch_manifest = manifest[manifest["epoch"].astype(int) == int(epoch)]
@@ -406,7 +408,7 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
 
         composite_task = start_image_export(
             composite,
-            f"sprawlgp_composite_{epoch}",
+            f"{task_prefix}_composite_{epoch}",
             composite_asset,
             grid,
             config,
@@ -424,7 +426,7 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
 
         count_task = start_image_export(
             count_image,
-            f"sprawlgp_valid_count_{epoch}",
+            f"{task_prefix}_valid_count_{epoch}",
             count_asset,
             grid,
             config,
@@ -440,65 +442,66 @@ def run_submission(config_path: Path, submit: bool) -> pd.DataFrame:
         )
         tasks.append(count_task)
 
-    terrain_asset = f"{terrain_folder}/elevation_slope"
-    terrain_task = start_image_export(
-        build_terrain_image(config),
-        "sprawlgp_elevation_slope",
-        terrain_asset,
-        grid,
-        config,
-        config["exports"]["terrain_pyramiding_policy"],
-    )
-    terrain_task.update(
-        {
-            "product_type": "terrain",
-            "epoch": "static",
-            "selected_scene_count": 0,
-            "selected_scene_ids_sha256": "",
-        }
-    )
-    tasks.append(terrain_task)
+    if not landsat_only:
+        terrain_asset = f"{terrain_folder}/elevation_slope"
+        terrain_task = start_image_export(
+            build_terrain_image(config),
+            "sprawlgp_elevation_slope",
+            terrain_asset,
+            grid,
+            config,
+            config["exports"]["terrain_pyramiding_policy"],
+        )
+        terrain_task.update(
+            {
+                "product_type": "terrain",
+                "epoch": "static",
+                "selected_scene_count": 0,
+                "selected_scene_ids_sha256": "",
+            }
+        )
+        tasks.append(terrain_task)
 
     metadata_dir = metadata_directory(config, project_root)
     task_frame = pd.DataFrame(tasks)
-    task_frame.to_csv(
-        resolve_project_path(config["exports"]["task_manifest"], project_root),
-        index=False,
-    )
-    build_ghsl_manifest(config, metadata_dir)
-    write_grid_linkage(config, grid, metadata_dir)
+    task_path = resolve_project_path(config["exports"]["task_manifest"], project_root)
+    task_path.parent.mkdir(parents=True, exist_ok=True)
+    task_frame.to_csv(task_path, index=False)
 
-    auxiliary = pd.DataFrame(
-        [
-            {
-                "source": "SRTM",
-                "asset_id": terrain_asset,
-                "representation": "exact_project_grid",
-                "temporal_representation": "static_approximately_2000",
-                "intended_role": "elevation_and_slope_predictors",
-            },
-            {
-                "source": "GHSL",
-                "asset_id": "see_ghsl_epoch_manifest.csv",
-                "representation": "native_100m_grid",
-                "temporal_representation": (
-                    f"{len(config['ghsl']['epochs'])}_configured_epochs"
-                ),
-                "intended_role": "auxiliary_benchmark_and_population",
-            },
-            {
-                "source": "OpenStreetMap",
-                "asset_id": config["osm"]["processed_output"],
-                "representation": "vector_EPSG32632",
-                "temporal_representation": "current_snapshot",
-                "intended_role": "recent_validation_and_accessibility",
-            },
-        ]
-    )
-    auxiliary.to_csv(
-        metadata_dir / config["metadata"]["auxiliary_source_manifest"],
-        index=False,
-    )
+    if not landsat_only:
+        build_ghsl_manifest(config, metadata_dir)
+        write_grid_linkage(config, grid, metadata_dir)
+        auxiliary = pd.DataFrame(
+            [
+                {
+                    "source": "SRTM",
+                    "asset_id": terrain_asset,
+                    "representation": "exact_project_grid",
+                    "temporal_representation": "static_approximately_2000",
+                    "intended_role": "elevation_and_slope_predictors",
+                },
+                {
+                    "source": "GHSL",
+                    "asset_id": "see_ghsl_epoch_manifest.csv",
+                    "representation": "native_100m_grid",
+                    "temporal_representation": (
+                        f"{len(config['ghsl']['epochs'])}_configured_epochs"
+                    ),
+                    "intended_role": "auxiliary_benchmark_and_population",
+                },
+                {
+                    "source": "OpenStreetMap",
+                    "asset_id": config["osm"]["processed_output"],
+                    "representation": "vector_EPSG32632",
+                    "temporal_representation": "current_snapshot",
+                    "intended_role": "recent_validation_and_accessibility",
+                },
+            ]
+        )
+        auxiliary.to_csv(
+            metadata_dir / config["metadata"]["auxiliary_source_manifest"],
+            index=False,
+        )
 
     print(
         json.dumps(

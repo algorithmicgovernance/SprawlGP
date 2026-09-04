@@ -10,8 +10,8 @@ cell-level built-up conversion modelling for Yaoundé, Cameroon.
 - Release: `2.0.0-provisional`
 - Status: `FROZEN_PROVISIONAL_RELEASE`
 - Mapping method: `ndbi`
-- Mapping selection: `PROVISIONAL_PENDING_MANUAL_VALIDATION`
-- Manual validation complete: `false`
+- Mapping selection: `VALIDATED`
+- Manual validation complete: `true`
 
 ## Spatial and temporal coverage
 
@@ -40,7 +40,8 @@ on pairwise common-valid support.
 
 ## Limitations
 
-NDBI is the operational mapping method for this frozen provisional release.
-Expert manual validation is pending. A later release will be produced if the
-validated mapping method changes. Spatial-support percentages must be retained
-when interpreting historical change.
+NDBI has been confirmed by manual validation as the mapping method for this
+release. NDBI and IBUI had identical weighted-F1 performance, with NDBI
+retained because of its slightly lower temporal reversal rate. The overall
+dataset release remains provisional while the temporal-transition, tracking
+support and population-aggregation audits are completed.

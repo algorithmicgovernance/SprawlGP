@@ -1,0 +1,88 @@
+{
+  "status": "PASS",
+  "states_checked": 6,
+  "training_performed": false,
+  "reconstruction_performed": false,
+  "final_fit_performed": false,
+  "locked_rows_used": 0,
+  "states": [
+    {
+      "horizon": "annual_1y",
+      "fold": 1,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/annual_1y/fold_1",
+      "metadata_path": "artifacts/models/day5_reconstructed/annual_1y/fold_1/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 1.1102230246251565e-15,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    },
+    {
+      "horizon": "annual_1y",
+      "fold": 2,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/annual_1y/fold_2",
+      "metadata_path": "artifacts/models/day5_reconstructed/annual_1y/fold_2/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 1.7763568394002505e-15,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    },
+    {
+      "horizon": "annual_1y",
+      "fold": 3,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/annual_1y/fold_3",
+      "metadata_path": "artifacts/models/day5_reconstructed/annual_1y/fold_3/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 9.992007221626409e-16,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    },
+    {
+      "horizon": "five_year_5y",
+      "fold": 1,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/five_year_5y/fold_1",
+      "metadata_path": "artifacts/models/day5_reconstructed/five_year_5y/fold_1/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 4.163336342344337e-16,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    },
+    {
+      "horizon": "five_year_5y",
+      "fold": 2,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/five_year_5y/fold_2",
+      "metadata_path": "artifacts/models/day5_reconstructed/five_year_5y/fold_2/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 2.220446049250313e-16,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    },
+    {
+      "horizon": "five_year_5y",
+      "fold": 3,
+      "status": "PASS",
+      "state_directory": "artifacts/models/day5_reconstructed/five_year_5y/fold_3",
+      "metadata_path": "artifacts/models/day5_reconstructed/five_year_5y/fold_3/metadata.json",
+      "feature_order_matches": true,
+      "prediction_callable_works": true,
+      "sample_rows": 5,
+      "maximum_absolute_oof_difference": 6.661338147750939e-16,
+      "probabilities_valid": true,
+      "locked_rows_used": 0
+    }
+  ]
+}

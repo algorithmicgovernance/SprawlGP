@@ -1,0 +1,7 @@
+dependency_name,dependency_path,observed_sha256,status
+grid_specification,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/grid_specification.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
+grid_reference,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/tests/reference/grid_v1.json,2e7b714996005503134f3bb5d6404ef0d3c0cba198f170c7bcd347ccac7ac525,PASS
+annual_orchestration_version,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/annual/orchestration/annual_orchestration_version.json,3acba829c3e26aed616c974ea51c5dfffab6fa79daf50eae14f1a616284ecfcc,PASS
+landsat_composite_manifest,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/annual/orchestration/landsat_composite_manifest.csv,85e3815da844398b5fe16518da6a78717eb9f9b012bbca191c6828613c043ee6,PASS
+annual_quality_summary,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/metadata/annual/landsat/annual_quality_summary.csv,30614e4815368b3e048e8bfe6e32a36d83137d497b37ef7a723b8690fca00591,PASS
+core_boundary,/Users/omer/Documents/MIORPA/Pending.../SprawlGP/data/processed/boundaries/yaounde_core.gpkg,8c499234ee75f6d76803c192f62f0e2079d3a87c512bcb28031160b38e37b521,PASS

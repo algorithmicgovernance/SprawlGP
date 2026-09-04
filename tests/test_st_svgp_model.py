@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import numpy as np
 import tensorflow as tf
-
 from src.models.st_svgp.block_inference import (
     DenseCviSites,
     block_kalman_filter,
@@ -20,7 +18,6 @@ from src.models.st_svgp.spatial import (
 from src.models.st_svgp.state_space import (
     matern32_covariance,
 )
-
 
 DTYPE = tf.float64
 
@@ -294,8 +291,9 @@ def test_block_filter_smoother_matches_dense_gaussian_inducing_posterior() -> No
 
 def test_real_config_contract_keeps_2020_locked() -> None:
     """The production model must not expose the final test during development."""
-    import yaml
     from pathlib import Path
+
+    import yaml
 
     path = Path(
         "configs/modeling/st_svgp.yaml" 
@@ -349,5 +347,151 @@ def test_temporal_lengthscale_can_be_frozen() -> None:
         tf.constant(1.5, dtype=DTYPE),
         atol=1.0e-12,
         rtol=1.0e-12,
+    )
+
+
+def test_inducing_locations_can_be_trainable_through_spatial_path() -> None:
+    from src.models.st_svgp.model import STSVGPModel
+
+    initial_locations = tf.constant(
+        [[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]],
+        dtype=DTYPE,
+    )
+
+    def make_model(*, trainable: bool = False) -> STSVGPModel:
+        with tf.device("/CPU:0"):
+            return STSVGPModel(
+                inducing_locations_km=initial_locations,
+                n_features=1,
+                spatial_initial_lengthscale_km=2.0,
+                temporal_initial_lengthscale_steps=1.5,
+                variance_initial=1.0,
+                jitter=1.0e-6,
+                quadrature_degree=20,
+                inducing_locations_trainable=trainable,
+                dtype=DTYPE,
+            )
+
+    fixed_model = make_model()
+    assert not isinstance(fixed_model.inducing_locations_km, tf.Variable)
+    assert all(
+        variable is not fixed_model.inducing_locations_km
+        for variable in fixed_model.trainable_variables
+    )
+    fixed_covariance = fixed_model.spatial_covariance()
+    assert tuple(fixed_covariance.shape) == (3, 3)
+    assert bool(tf.reduce_all(tf.math.is_finite(fixed_covariance)).numpy())
+
+    model = make_model(trainable=True)
+    assert isinstance(model.inducing_locations_km, tf.Variable)
+    assert model.inducing_locations_km.trainable
+    assert sum(
+        variable is model.inducing_locations_km
+        for variable in model.trainable_variables
+    ) == 1
+
+    def spatial_loss() -> tf.Tensor:
+        spatial_covariance = model.spatial_covariance()
+        latent_mean, latent_variance = model.latent_marginals(
+            features=tf.zeros([1, 1], dtype=DTYPE),
+            coordinates_km=tf.constant([[0.2, 0.3]], dtype=DTYPE),
+            inducing_mean=tf.constant([0.4, -0.2, 0.1], dtype=DTYPE),
+            inducing_covariance=0.5 * spatial_covariance,
+            spatial_covariance=spatial_covariance,
+        )
+        return tf.reduce_sum(latent_mean + latent_variance)
+
+    with tf.GradientTape() as tape:
+        loss = spatial_loss()
+    gradient = tape.gradient(loss, model.inducing_locations_km)
+
+    assert gradient is not None
+    assert bool(tf.reduce_all(tf.math.is_finite(gradient)).numpy())
+    assert bool(tf.reduce_any(tf.not_equal(gradient, 0.0)).numpy())
+
+    before = model.inducing_locations_km.numpy().copy()
+    model.inducing_locations_km.assign_sub(
+        tf.cast(1.0e-4, DTYPE) * gradient
+    )
+    after = model.inducing_locations_km.numpy()
+    assert bool(tf.reduce_all(tf.math.is_finite(after)).numpy())
+    assert bool(tf.reduce_any(tf.not_equal(before, after)).numpy())
+
+
+def test_linear_temporal_trend_mean_equivalence_effect_and_gradient() -> None:
+    from src.models.st_svgp.model import STSVGPModel
+
+    def make_model(*, enabled: bool) -> STSVGPModel:
+        return STSVGPModel(
+            inducing_locations_km=tf.constant(
+                [[0.0, 0.0], [1.0, 0.0]],
+                dtype=DTYPE,
+            ),
+            n_features=2,
+            spatial_initial_lengthscale_km=2.0,
+            temporal_initial_lengthscale_steps=1.5,
+            variance_initial=1.0,
+            jitter=1.0e-6,
+            quadrature_degree=20,
+            temporal_trend_enabled=enabled,
+            temporal_trend_initial_coefficient=0.0,
+            dtype=DTYPE,
+        )
+
+    features = tf.constant(
+        [[1.0, 2.0], [-1.0, 0.5]],
+        dtype=DTYPE,
+    )
+    disabled = make_model(enabled=False)
+    enabled = make_model(enabled=True)
+    disabled.beta0.assign(0.4)
+    disabled.beta.assign([0.2, -0.3])
+    enabled.beta0.assign(disabled.beta0)
+    enabled.beta.assign(disabled.beta)
+
+    baseline_mean = disabled.linear_mean(features)
+    tf.debugging.assert_near(
+        disabled.linear_mean(
+            features,
+            temporal_trend_time=1.0,
+        ),
+        baseline_mean,
+    )
+    tf.debugging.assert_near(
+        enabled.linear_mean(
+            features,
+            temporal_trend_time=1.0,
+        ),
+        baseline_mean,
+    )
+
+    assert enabled.beta_time is not None
+    enabled.beta_time.assign(0.25)
+    trended_mean = enabled.linear_mean(
+        features,
+        temporal_trend_time=1.0,
+    )
+    tf.debugging.assert_near(
+        trended_mean - baseline_mean,
+        tf.fill(
+            tf.shape(baseline_mean),
+            tf.constant(0.25, dtype=DTYPE),
+        ),
+    )
+
+    with tf.GradientTape() as tape:
+        objective = tf.reduce_sum(
+            enabled.linear_mean(
+                features,
+                temporal_trend_time=1.0,
+            )
+        )
+    gradient = tape.gradient(objective, enabled.beta_time)
+
+    assert gradient is not None
+    assert bool(tf.math.is_finite(gradient).numpy())
+    tf.debugging.assert_near(
+        gradient,
+        tf.constant(2.0, dtype=DTYPE),
     )
 

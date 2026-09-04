@@ -1,0 +1,39 @@
+earth_engine_project: urban-sprawl-ssa
+seed: 20260809
+minimum_spacing_m: 250
+candidate_oversampling_factor: 20
+tile_scale: 4
+expansion_batch_size: 60
+
+episodes:
+  episode_2016:
+    before_year: 2015
+    peak_year: 2016
+    after_year: 2017
+  episode_2020:
+    before_year: 2019
+    peak_year: 2020
+    after_year: 2021
+
+initial_quotas_per_episode:
+  new_built_then_reversal: 70
+  new_built_persistent_raw: 40
+  stable_nonbuilt_control: 5
+  stable_built_control: 5
+
+reserve_target_per_episode:
+  new_built_then_reversal: 140
+  new_built_persistent_raw: 80
+  stable_nonbuilt_control: 10
+  stable_built_control: 10
+
+inputs:
+  grid_specification: data/metadata/grid_specification.json
+  core_boundary: data/processed/boundaries/yaounde_core.gpkg
+  state_manifest: data/metadata/annual/annual_dataset/state_output_manifest.csv
+  threshold_table: data/metadata/annual/annual_dataset/annual_thresholds.csv
+
+outputs:
+  sample: data/validation/annual_diagnostic/annual_diagnostic_sample.csv
+  labels: data/validation/annual_diagnostic/annual_diagnostic_labels.csv
+  reserve: data/validation/annual_diagnostic/annual_diagnostic_reserve.csv

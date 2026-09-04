@@ -1,0 +1,93 @@
+{
+  "status": "FAIL",
+  "shap_dependency_declared": true,
+  "shap_dependency_installed": false,
+  "horizons": {
+    "annual_1y": {
+      "status": "FAIL",
+      "model_directory": "artifacts/models/st_svgp_annual/experiments/convergence_3000",
+      "folds": [
+        {
+          "fold": 1,
+          "state_path": "artifacts/models/st_svgp_annual/experiments/convergence_3000/fold_1/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        },
+        {
+          "fold": 2,
+          "state_path": "artifacts/models/st_svgp_annual/experiments/convergence_3000/fold_2/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        },
+        {
+          "fold": 3,
+          "state_path": "artifacts/models/st_svgp_annual/experiments/convergence_3000/fold_3/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        }
+      ]
+    },
+    "five_year_5y": {
+      "status": "FAIL",
+      "model_directory": "artifacts/models/st_svgp",
+      "folds": [
+        {
+          "fold": 1,
+          "state_path": "artifacts/models/st_svgp/fold_1/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        },
+        {
+          "fold": 2,
+          "state_path": "artifacts/models/st_svgp/fold_2/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        },
+        {
+          "fold": 3,
+          "state_path": "artifacts/models/st_svgp/fold_3/st_svgp_state.npz",
+          "model_state_found": false,
+          "preprocessing_state_found": false,
+          "inducing_locations_found": false,
+          "kernel_parameters_found": false,
+          "variational_cvi_state_found": false,
+          "prediction_callable_reconstructed": false,
+          "oof_reproduction_check_passed": false,
+          "error": "Rolling fold state not found."
+        }
+      ]
+    }
+  },
+  "reconstruction_required": true,
+  "reconstruction_path": "Rerun each unchanged rolling fold with the retained config and seed while persisting model parameters, fold preprocessing, inducing locations, and dense CVI sites immediately after training. No checkpoint/resume or surrogate."
+}

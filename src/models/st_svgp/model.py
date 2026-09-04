@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import tensorflow as tf
-
 from src.models.st_svgp.block_inference import (
     BlockFilterResult,
     BlockSmootherResult,
@@ -52,6 +51,9 @@ class STSVGPModel:
         jitter: float,
         quadrature_degree: int,
         temporal_lengthscale_trainable: bool = True,
+        inducing_locations_trainable: bool = False,
+        temporal_trend_enabled: bool = False,
+        temporal_trend_initial_coefficient: float = 0.0,
         dtype: tf.dtypes.DType = tf.float64,
     ) -> None:
         self.dtype = dtype
@@ -60,11 +62,21 @@ class STSVGPModel:
             quadrature_degree
         )
 
+        self.inducing_locations_trainable = bool(
+            inducing_locations_trainable
+        )
+        initial_inducing_locations = tf.convert_to_tensor(
+            inducing_locations_km,
+            dtype=dtype,
+        )
         self.inducing_locations_km = (
-            tf.convert_to_tensor(
-                inducing_locations_km,
-                dtype=dtype,
+            tf.Variable(
+                initial_inducing_locations,
+                trainable=True,
+                name="inducing_locations_km",
             )
+            if self.inducing_locations_trainable
+            else initial_inducing_locations
         )
 
         if (
@@ -82,6 +94,9 @@ class STSVGPModel:
         self.temporal_lengthscale_trainable = bool(
             temporal_lengthscale_trainable
         )
+        self.temporal_trend_enabled = bool(
+            temporal_trend_enabled
+        )
 
         self.beta0 = tf.Variable(
             0.0,
@@ -94,6 +109,15 @@ class STSVGPModel:
                 dtype=dtype,
             ),
             name="linear_coefficients",
+        )
+        self.beta_time = (
+            tf.Variable(
+                temporal_trend_initial_coefficient,
+                dtype=dtype,
+                name="temporal_trend_coefficient",
+            )
+            if self.temporal_trend_enabled
+            else None
         )
 
         self.log_spatial_lengthscales = tf.Variable(
@@ -165,6 +189,12 @@ class STSVGPModel:
                 self.log_temporal_lengthscale,
             )
 
+        if self.beta_time is not None:
+            variables.append(self.beta_time)
+
+        if self.inducing_locations_trainable:
+            variables.append(self.inducing_locations_km)
+
         return variables
 
     def spatial_covariance(self) -> tf.Tensor:
@@ -181,17 +211,30 @@ class STSVGPModel:
     def linear_mean(
         self,
         features: tf.Tensor,
+        temporal_trend_time: tf.Tensor | float | None = None,
     ) -> tf.Tensor:
         features = tf.convert_to_tensor(
             features,
             dtype=self.dtype,
         )
-        return (
+        mean = (
             self.beta0
             + tf.linalg.matvec(
                 features,
                 self.beta,
             )
+        )
+
+        if self.beta_time is None:
+            return mean
+        if temporal_trend_time is None:
+            raise ValueError(
+                "Enabled temporal trend requires scaled time."
+            )
+
+        return mean + self.beta_time * tf.cast(
+            temporal_trend_time,
+            self.dtype,
         )
 
     def posterior(
@@ -261,6 +304,7 @@ class STSVGPModel:
         self,
         *,
         features: tf.Tensor,
+        temporal_trend_time: tf.Tensor | float | None = None,
         coordinates_km: tf.Tensor,
         inducing_mean: tf.Tensor,
         inducing_covariance: tf.Tensor,
@@ -290,7 +334,12 @@ class STSVGPModel:
         )
 
         return (
-            self.linear_mean(features)
+            self.linear_mean(
+                features,
+                temporal_trend_time=(
+                    temporal_trend_time
+                ),
+            )
             + residual_mean,
             residual_variance,
         )
@@ -300,6 +349,7 @@ class STSVGPModel:
         *,
         targets: tf.Tensor,
         features: tf.Tensor,
+        temporal_trend_time: tf.Tensor | float | None = None,
         coordinates_km: tf.Tensor,
         inducing_mean: tf.Tensor,
         inducing_covariance: tf.Tensor,
@@ -309,6 +359,9 @@ class STSVGPModel:
         latent_mean, latent_variance = (
             self.latent_marginals(
                 features=features,
+                temporal_trend_time=(
+                    temporal_trend_time
+                ),
                 coordinates_km=coordinates_km,
                 inducing_mean=inducing_mean,
                 inducing_covariance=(
@@ -335,6 +388,7 @@ class STSVGPModel:
         *,
         targets: tf.Tensor,
         features: tf.Tensor,
+        temporal_trend_time: tf.Tensor | float | None = None,
         coordinates_km: tf.Tensor,
         inducing_mean: tf.Tensor,
         inducing_covariance: tf.Tensor,
@@ -368,6 +422,9 @@ class STSVGPModel:
             ell = self.expected_log_likelihood(
                 targets=targets,
                 features=features,
+                temporal_trend_time=(
+                    temporal_trend_time
+                ),
                 coordinates_km=coordinates_km,
                 inducing_mean=current_mean,
                 inducing_covariance=(
@@ -438,6 +495,7 @@ class STSVGPModel:
                 tf.Tensor,
                 tf.Tensor,
                 float,
+                float | None,
             ]
         ],
     ) -> tuple[tf.Tensor, STPosterior]:
@@ -457,10 +515,14 @@ class STSVGPModel:
             coordinates,
             targets,
             likelihood_scale,
+            temporal_trend_time,
         ) in enumerate(batches):
             ell = self.expected_log_likelihood(
                 targets=targets,
                 features=features,
+                temporal_trend_time=(
+                    temporal_trend_time
+                ),
                 coordinates_km=coordinates,
                 inducing_mean=(
                     posterior.inducing_means[
@@ -575,6 +637,7 @@ class STSVGPModel:
         self,
         *,
         features: tf.Tensor,
+        temporal_trend_time: tf.Tensor | float | None = None,
         coordinates_km: tf.Tensor,
         inducing_mean: tf.Tensor,
         inducing_covariance: tf.Tensor,
@@ -584,6 +647,9 @@ class STSVGPModel:
         latent_mean, latent_variance = (
             self.latent_marginals(
                 features=features,
+                temporal_trend_time=(
+                    temporal_trend_time
+                ),
                 coordinates_km=coordinates_km,
                 inducing_mean=inducing_mean,
                 inducing_covariance=(

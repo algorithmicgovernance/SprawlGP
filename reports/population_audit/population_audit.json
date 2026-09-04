@@ -1,0 +1,68 @@
+[
+  {
+    "epoch": 2000,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 1596255.069121863,
+    "reconstructed_population_total_30m_core": 1595883.192105293,
+    "relative_difference_pct": -0.023296841699273763,
+    "maximum_native_population_count": 643.24951171875,
+    "maximum_corrected_density_per_km2": 64754.5625,
+    "maximum_implied_people_per_30m_cell": 58.27910625
+  },
+  {
+    "epoch": 2005,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 1980363.817584523,
+    "reconstructed_population_total_30m_core": 1980106.8448894995,
+    "relative_difference_pct": -0.012976034642813916,
+    "maximum_native_population_count": 764.8169555664062,
+    "maximum_corrected_density_per_km2": 76992.5,
+    "maximum_implied_people_per_30m_cell": 69.29325
+  },
+  {
+    "epoch": 2010,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 2459882.689605479,
+    "reconstructed_population_total_30m_core": 2459521.1054694904,
+    "relative_difference_pct": -0.014699243078405451,
+    "maximum_native_population_count": 891.5935668945312,
+    "maximum_corrected_density_per_km2": 89754.8359375,
+    "maximum_implied_people_per_30m_cell": 80.77935234374999
+  },
+  {
+    "epoch": 2015,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 3084345.6702105906,
+    "reconstructed_population_total_30m_core": 3083792.2805521768,
+    "relative_difference_pct": -0.01794188192843001,
+    "maximum_native_population_count": 1076.5140380859375,
+    "maximum_corrected_density_per_km2": 108370.359375,
+    "maximum_implied_people_per_30m_cell": 97.5333234375
+  },
+  {
+    "epoch": 2020,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 3864311.367318584,
+    "reconstructed_population_total_30m_core": 3863853.6641979017,
+    "relative_difference_pct": -0.011844364420354286,
+    "maximum_native_population_count": 1352.216064453125,
+    "maximum_corrected_density_per_km2": 136124.703125,
+    "maximum_implied_people_per_30m_cell": 122.5122328125
+  },
+  {
+    "epoch": 2025,
+    "native_crs": "",
+    "native_nominal_scale_m": 100.0,
+    "native_population_total_core": 4694650.398145079,
+    "reconstructed_population_total_30m_core": 4694093.65449384,
+    "relative_difference_pct": -0.011859107793377911,
+    "maximum_native_population_count": 1649.169921875,
+    "maximum_corrected_density_per_km2": 166018.40625,
+    "maximum_implied_people_per_30m_cell": 149.416565625
+  }
+]

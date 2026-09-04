@@ -198,6 +198,44 @@ Completed Landsat composites are converted into SAVI, MNDWI, NDBI, IBI, IBUI, Vb
 The resulting binary maps are unvalidated candidate pseudo-labels. Missing or numerically undefined pixels remain masked and are not treated as non-built-up.
 Final index selection, comparative validation and temporal correction are performed in later stages.
 
+### Built-up mapping validation
+
+The operational built-up mapping method was validated using 270 manually
+reviewed samples distributed across the six epochs (2000, 2005, 2010, 2015,
+2020 and 2025). Of these samples, 205 received a certain built/non-built label
+and 65 were retained as uncertain and excluded from the accuracy calculation.
+
+Four candidate methods were evaluated using the predefined design-weighted
+validation protocol:
+
+- NDBI
+- IBUI
+- NDBSUI
+- VbSWIR1-BI
+
+NDBI and IBUI produced identical manual-validation performance:
+
+| Method | Mean yearly weighted F1 | Minimum yearly weighted F1 | Reversal rate |
+|---|---:|---:|---:|
+| NDBI | 0.8859 | 0.5401 | **0.0946** |
+| IBUI | 0.8859 | 0.5401 | 0.1055 |
+| NDBSUI | 0.8606 | 0.4420 | **0.0620** |
+| VbSWIR1-BI | 0.2422 | 0.0417 | 0.4285 |
+
+Because NDBI and IBUI are tied on both the primary metric and the first
+tie-breaker, the predefined temporal-consistency tie-break selects NDBI.
+
+A **temporal reversal** is a cell classified as built at one epoch but
+classified as non-built at the following epoch, considering only locations
+that are valid at both dates. Since established built-up land is expected to
+be largely persistent over five-year periods, a lower reversal rate indicates
+better temporal consistency.
+
+NDBI is therefore retained and frozen as the built-up mapping method for the
+current 30 m dataset. The difference with IBUI is small; the selection should
+be interpreted as a marginal preference based on temporal consistency rather
+than evidence that NDBI is substantially more accurate.
+
 #### Spatial Predictors
 
 Potential predictors include:
@@ -285,6 +323,154 @@ Advantages:
 
 ---
 
+## Study Area
+
+**Yaoundé, Cameroon**
+
+Yaoundé provides a representative example of a rapidly expanding Sub-Saharan African city experiencing dispersed urbanisation.
+
+---
+
+## Setup
+
+```bash
+python -m venv .venvt
+source .venvt/bin/activate
+make install
+earthengine authenticate
+```
+
+All commands below are run from the repository root. Earth Engine export stages are asynchronous; repeat the corresponding `*-status` target until tasks complete before finalising or assembling outputs.
+
+## Reproduce the data pipeline
+
+### 1. Study area and five-year reference pipeline
+
+```bash
+make build-grid
+make landsat-catalog
+
+make orchestrate-preflight
+make orchestrate-submit
+make orchestrate-status
+make orchestrate-osm
+make orchestrate-finalize
+make test-orchestrate
+
+make built-up-preflight
+make built-up-submit
+make built-up-status
+make built-up-finalize
+make test-built-up
+
+make validation-preflight
+make validation-samples
+# Complete the manual labels before evaluation/freezing.
+make validation-evaluate
+make validation-freeze
+make test-validation
+
+make dataset-preflight
+make dataset-submit-rasters
+make dataset-status-rasters
+make dataset-finalize-rasters
+make dataset-submit-tables
+make dataset-status-tables
+# Download the exported cell-time CSV files to data/staging/cell_time_exports/.
+make dataset-assemble
+make dataset-finalize
+make test-dataset
+```
+
+### 2. Annual observations and annual transition dataset
+
+```bash
+make annual-catalog
+
+make annual-orchestration-preflight
+make annual-orchestration-submit
+make annual-orchestration-status
+make annual-orchestration-finalize
+
+make annual-dataset-preflight
+make annual-products-submit
+make annual-products-status
+make annual-products-finalize
+make annual-audit
+
+make annual-build-tables
+make annual-tables-status
+# Download the annual table exports to data/staging/annual_cell_time_exports/.
+make annual-tables-assemble
+```
+
+Targeted annual label validation is intentionally separate:
+
+```bash
+make annual-diagnostic-preflight
+make annual-diagnostic-sample
+# Review the generated labels independently before running:
+make annual-diagnostic-evaluate
+```
+
+Until this review is completed, annual built-up labels remain provisional.
+
+## Reproduce the retained modeling evidence
+
+Run the mathematical/implementation validation first:
+
+```bash
+make st-svgp-pretraining-validation PYTHON=./.venvt/bin/python
+```
+
+Validate the annual data/model contract:
+
+```bash
+make st-svgp-annual-preflight PYTHON=./.venvt/bin/python
+```
+
+Reproduce the retained annual structural reference and primary rolling experiment:
+
+```bash
+make st-svgp-tren-a01-preflight PYTHON=./.venvt/bin/python
+make st-svgp-tren-a01 PYTHON=./.venvt/bin/python
+
+make st-svgp-primary-preflight PYTHON=./.venvt/bin/python
+make st-svgp-primary PYTHON=./.venvt/bin/python
+```
+
+The clip-only sensitivity analysis is available separately:
+
+```bash
+make st-svgp-early-clip-100k-preflight PYTHON=./.venvt/bin/python
+make st-svgp-early-clip-100k PYTHON=./.venvt/bin/python
+```
+
+Failure diagnostics and explainability are generated from frozen/reconstructed OOF states without using locked rows:
+
+```bash
+make day5-st-svgp-preflight PYTHON=./.venvt/bin/python
+make day5-st-svgp-oof-diagnostics PYTHON=./.venvt/bin/python
+make day5-st-svgp-reconstruction-preflight PYTHON=./.venvt/bin/python
+make day5-st-svgp-reconstruct-gate-a PYTHON=./.venvt/bin/python
+make st-svgp-reconstruct-remaining-folds PYTHON=./.venvt/bin/python
+make st-svgp-shap PYTHON=./.venvt/bin/python
+```
+
+## Repository layout
+
+```text
+configs/   Experiment and pipeline contracts
+src/       Data-processing, modeling and evaluation code
+data/      Raw/local inputs, metadata, validation samples and final datasets
+reports/   Small reproducible summaries, figures and diagnostics
+artifacts/ Fitted/reconstructed model state; normally local only
+tests/     Pipeline, mathematical and regression tests
+docs/      Detailed structure, methods and handover documentation
+```
+
+See [`docs/documented_file_structure.md`](docs/documented_file_structure.md) for the detailed tracking policy and [`docs/reproduction_and_handover.md`](docs/reproduction_and_handover.md) for the full clean-run procedure.
+
 ## Outputs
 
 The framework generates:
@@ -294,14 +480,6 @@ The framework generates:
 - Probabilistic urban forecasts (2035)
 - Predictive uncertainty maps
 - Forecast evaluation metrics
-
----
-
-## Study Area
-
-**Yaoundé, Cameroon**
-
-Yaoundé provides a representative example of a rapidly expanding Sub-Saharan African city experiencing dispersed urbanisation.
 
 ---
 

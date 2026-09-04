@@ -1315,9 +1315,15 @@ def validate_manual_labels(
             "Labels 0 and 1 require a reference source."
         )
 
+    # dates = pd.to_datetime(
+    #     result.loc[certain, "reference_image_date"],
+    #     errors="coerce",
+    # )
     dates = pd.to_datetime(
         result.loc[certain, "reference_image_date"],
         errors="coerce",
+        format="mixed",
+        utc=True,
     )
 
     if dates.isna().any():
@@ -1662,13 +1668,32 @@ def evaluate(config_path: Path) -> dict[str, Any]:
         samples,
         config,
     )
+
     dataset = samples.drop(columns="geometry").merge(
         labels.drop(columns=["epoch"]),
         on="sample_id",
         how="left",
         validate="one_to_one",
     )
+
+    # The existing validation sample stores candidate classifications as
+    # built_<method>. Expose stable pred_<method> aliases for evaluation
+    # without modifying the original GeoPackage.
+    for method in methods:
+        prediction_column = f"pred_{method}"
+        built_column = f"built_{method}"
+
+        if prediction_column not in dataset.columns:
+            if built_column not in dataset.columns:
+                raise ValueError(
+                    "Missing candidate prediction column for "
+                    f"{method}: expected {prediction_column} "
+                    f"or {built_column}."
+                )
+            dataset[prediction_column] = dataset[built_column].astype(int)
+
     validate_evaluation_population(dataset, config)
+    
     dataset.to_parquet(
         outputs["validation_dataset"],
         index=False,
@@ -1680,11 +1705,6 @@ def evaluate(config_path: Path) -> dict[str, Any]:
 
     for method in methods:
         prediction_column = f"pred_{method}"
-
-        if prediction_column not in certain.columns:
-            raise ValueError(
-                f"Missing prediction column: {prediction_column}"
-            )
 
         for epoch, group in certain.groupby("epoch"):
             yearly_rows.append(
