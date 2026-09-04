@@ -569,6 +569,8 @@ ST_SVGP_FIXED_1P5_CONFIG := configs/modeling/st_svgp/temporal_lengthscale_fixed_
 ST_SVGP_VALIDATION_DIR := configs/modeling/st_svgp
 ST_SVGP_DAY5_CONFIG := configs/modeling/day5_st_svgp_diagnostics.yaml
 
+ST_SVGP_TREN_A01_CONFIG := configs/modeling/st_svgp_improvements/annual/temporal/time_trend.yaml
+ST_SVGP_PRIMARY_CONFIG := configs/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping.yaml
 ST_SVGP_EARLY_CLIP_100K_CONFIG := configs/modeling/st_svgp_improvements/annual/combined/time_trend_early_stopping_clip_100k.yaml
 
 .PHONY: st-svgp-tests st-svgp-test-temporal-kernel st-svgp-test-filter-smoother \
@@ -590,7 +592,9 @@ ST_SVGP_EARLY_CLIP_100K_CONFIG := configs/modeling/st_svgp_improvements/annual/c
 	day5-st-svgp-reconstruct-gate-a \
 	st-svgp-reconstruct-remaining-folds st-svgp-shap \
 	st-svgp-early-clip-100k-preflight \
-	st-svgp-early-clip-100k
+	st-svgp-early-clip-100k \
+	st-svgp-tren-a01-preflight st-svgp-tren-a01 \
+	st-svgp-primary-preflight st-svgp-primary
 
 # [01/37] Matérn-3/2 state-space covariance equals direct kernel: ell=0.5, variance=0.3.
 # [02/37] Matérn-3/2 state-space covariance equals direct kernel: ell=1.0, variance=1.0.
@@ -820,4 +824,26 @@ st-svgp-early-clip-100k-preflight:
 st-svgp-early-clip-100k:
 	$(PYTHON) -m src.models.train_st_svgp \
 		--config $(ST_SVGP_EARLY_CLIP_100K_CONFIG) \
+		--rolling-only
+
+st-svgp-tren-a01-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_TREN_A01_CONFIG) \
+		--preflight-only
+
+st-svgp-tren-a01:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_TREN_A01_CONFIG) \
+		--rolling-only
+
+# PRIMARY annual development model: EARLY-STOP-A01.
+# Development-only: do not run a final/locked evaluation here.
+st-svgp-primary-preflight:
+	$(PYTHON) -m src.models.train_st_svgp \\
+		--config $(ST_SVGP_PRIMARY_CONFIG) \
+		--preflight-only
+
+st-svgp-primary:
+	$(PYTHON) -m src.models.train_st_svgp \
+		--config $(ST_SVGP_PRIMARY_CONFIG) \
 		--rolling-only

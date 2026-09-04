@@ -323,6 +323,154 @@ Advantages:
 
 ---
 
+## Study Area
+
+**Yaoundé, Cameroon**
+
+Yaoundé provides a representative example of a rapidly expanding Sub-Saharan African city experiencing dispersed urbanisation.
+
+---
+
+## Setup
+
+```bash
+python -m venv .venvt
+source .venvt/bin/activate
+make install
+earthengine authenticate
+```
+
+All commands below are run from the repository root. Earth Engine export stages are asynchronous; repeat the corresponding `*-status` target until tasks complete before finalising or assembling outputs.
+
+## Reproduce the data pipeline
+
+### 1. Study area and five-year reference pipeline
+
+```bash
+make build-grid
+make landsat-catalog
+
+make orchestrate-preflight
+make orchestrate-submit
+make orchestrate-status
+make orchestrate-osm
+make orchestrate-finalize
+make test-orchestrate
+
+make built-up-preflight
+make built-up-submit
+make built-up-status
+make built-up-finalize
+make test-built-up
+
+make validation-preflight
+make validation-samples
+# Complete the manual labels before evaluation/freezing.
+make validation-evaluate
+make validation-freeze
+make test-validation
+
+make dataset-preflight
+make dataset-submit-rasters
+make dataset-status-rasters
+make dataset-finalize-rasters
+make dataset-submit-tables
+make dataset-status-tables
+# Download the exported cell-time CSV files to data/staging/cell_time_exports/.
+make dataset-assemble
+make dataset-finalize
+make test-dataset
+```
+
+### 2. Annual observations and annual transition dataset
+
+```bash
+make annual-catalog
+
+make annual-orchestration-preflight
+make annual-orchestration-submit
+make annual-orchestration-status
+make annual-orchestration-finalize
+
+make annual-dataset-preflight
+make annual-products-submit
+make annual-products-status
+make annual-products-finalize
+make annual-audit
+
+make annual-build-tables
+make annual-tables-status
+# Download the annual table exports to data/staging/annual_cell_time_exports/.
+make annual-tables-assemble
+```
+
+Targeted annual label validation is intentionally separate:
+
+```bash
+make annual-diagnostic-preflight
+make annual-diagnostic-sample
+# Review the generated labels independently before running:
+make annual-diagnostic-evaluate
+```
+
+Until this review is completed, annual built-up labels remain provisional.
+
+## Reproduce the retained modeling evidence
+
+Run the mathematical/implementation validation first:
+
+```bash
+make st-svgp-pretraining-validation PYTHON=./.venvt/bin/python
+```
+
+Validate the annual data/model contract:
+
+```bash
+make st-svgp-annual-preflight PYTHON=./.venvt/bin/python
+```
+
+Reproduce the retained annual structural reference and primary rolling experiment:
+
+```bash
+make st-svgp-tren-a01-preflight PYTHON=./.venvt/bin/python
+make st-svgp-tren-a01 PYTHON=./.venvt/bin/python
+
+make st-svgp-primary-preflight PYTHON=./.venvt/bin/python
+make st-svgp-primary PYTHON=./.venvt/bin/python
+```
+
+The clip-only sensitivity analysis is available separately:
+
+```bash
+make st-svgp-early-clip-100k-preflight PYTHON=./.venvt/bin/python
+make st-svgp-early-clip-100k PYTHON=./.venvt/bin/python
+```
+
+Failure diagnostics and explainability are generated from frozen/reconstructed OOF states without using locked rows:
+
+```bash
+make day5-st-svgp-preflight PYTHON=./.venvt/bin/python
+make day5-st-svgp-oof-diagnostics PYTHON=./.venvt/bin/python
+make day5-st-svgp-reconstruction-preflight PYTHON=./.venvt/bin/python
+make day5-st-svgp-reconstruct-gate-a PYTHON=./.venvt/bin/python
+make st-svgp-reconstruct-remaining-folds PYTHON=./.venvt/bin/python
+make st-svgp-shap PYTHON=./.venvt/bin/python
+```
+
+## Repository layout
+
+```text
+configs/   Experiment and pipeline contracts
+src/       Data-processing, modeling and evaluation code
+data/      Raw/local inputs, metadata, validation samples and final datasets
+reports/   Small reproducible summaries, figures and diagnostics
+artifacts/ Fitted/reconstructed model state; normally local only
+tests/     Pipeline, mathematical and regression tests
+docs/      Detailed structure, methods and handover documentation
+```
+
+See [`docs/documented_file_structure.md`](docs/documented_file_structure.md) for the detailed tracking policy and [`docs/reproduction_and_handover.md`](docs/reproduction_and_handover.md) for the full clean-run procedure.
+
 ## Outputs
 
 The framework generates:
@@ -332,14 +480,6 @@ The framework generates:
 - Probabilistic urban forecasts (2035)
 - Predictive uncertainty maps
 - Forecast evaluation metrics
-
----
-
-## Study Area
-
-**Yaoundé, Cameroon**
-
-Yaoundé provides a representative example of a rapidly expanding Sub-Saharan African city experiencing dispersed urbanisation.
 
 ---
 
